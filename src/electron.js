@@ -1,20 +1,96 @@
 import windowStateManager from 'electron-window-state';
-import { app, BrowserWindow, ipcMain, screen, globalShortcut } from 'electron';
+import { app, BrowserWindow, screen,ipcMain, globalShortcut, Tray, Menu } from 'electron';
 import contextMenu from 'electron-context-menu';
 import serve from 'electron-serve';
 
-try {
-    require('electron-reloader')(module);
-} catch (e) {
-    console.error(e);
+let tray = null
+
+function createTray() {
+    // 创建托盘图标
+    tray = new Tray('./assets/icon.png')
+
+    // 创建托盘菜单
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: '显示主窗口',
+            click: () => {
+                if (!mainWindow) createMainWindow();
+                mainWindow.show();
+            }
+        },
+        {
+            label: '显示设置',
+            click: () => {
+                if (!settingsWindow) createSettingsWindow();
+                settingsWindow.show();
+            }
+        },
+        { type: 'separator' },
+        {
+            label: '退出',
+            click: () => {
+                app.quit()
+            }
+        }
+    ])
+
+    // 设置托盘的上下文菜单
+    tray.setContextMenu(contextMenu)
+
+    // 设置托盘的提示文字
+    tray.setToolTip('我的应用程序')
+
+    // 点击托盘图标时显示主窗口
+    // tray.on('click', () => {
+    //     mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
+    // })
 }
 
 const serveURL = serve({ directory: '.' });
-const port = process.env.PORT || 5173;
+const port = process.env.PORT || "5173";
 const dev = !app.isPackaged;
-let mainWindow;
 
-function createWindow() {
+let mainWindow;
+let settingsWindow;
+
+
+function createSettingsWindow() {
+    const window = new BrowserWindow({
+        width: 400,
+        height: 600,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        },
+    });
+    window.once('ready-to-show', () => {
+        window.show();
+        window.focus();
+    });
+
+    settingsWindow = window;
+
+    if (dev) loadVite(window ,port, "settings");
+    else serveURL(mainWindow);
+}
+
+contextMenu({
+    showLookUpSelection: true,
+    showSearchWithGoogle: true,
+    showCopyImage: true,
+});
+
+function loadVite(window, port, path = "") {
+    console.log(`http://localhost:${port}/${path}`);
+    window.loadURL(`http://localhost:${port}/${path}`).catch((e) => {
+        console.log('Error loading URL, retrying', e);
+        setTimeout(() => {
+            loadVite(window, port, path);
+        }, 1000);
+    });
+}
+
+function createMainWindow() {
     const display = screen.getPrimaryDisplay();
     const { width, height } = display.bounds;
     let windowState = windowStateManager({
@@ -22,7 +98,7 @@ function createWindow() {
         defaultHeight: height,
     });
 
-    const mainWindow = new BrowserWindow({
+    const window = new BrowserWindow({
         width,
         height,
         x: 0,
@@ -40,62 +116,44 @@ function createWindow() {
         roundedCorners: false
     });
 
-    windowState.manage(mainWindow);
+    windowState.manage(window);
 
-    mainWindow.once('ready-to-show', () => {
-        mainWindow.show();
-        mainWindow.setAlwaysOnTop(true, 'screen-saver');
-        mainWindow.setBounds({ x: 0, y: 0, width, height });
-        mainWindow.focus();
+    window.once('ready-to-show', () => {
+        window.show();
+        window.setAlwaysOnTop(true, 'screen-saver');
+        window.setBounds({ x: 0, y: 0, width, height });
+        window.focus();
     });
 
-    mainWindow.on('close', () => {
-        windowState.saveState(mainWindow);
+    window.on('close', () => {
+        windowState.saveState(window);
     });
-
-    return mainWindow;
-}
-
-contextMenu({
-    showLookUpSelection: true,
-    showSearchWithGoogle: true,
-    showCopyImage: true,
-});
-
-function loadVite(port) {
-    mainWindow.loadURL(`http://localhost:${port}`).catch((e) => {
-        console.log('Error loading URL, retrying', e);
-        setTimeout(() => {
-            loadVite(port);
-        }, 200);
-    });
-}
-
-function createMainWindow() {
-    mainWindow = createWindow();
-    mainWindow.once('close', () => {
+    window.once('close', () => {
         mainWindow = null;
     });
+
+    mainWindow = window;
 
     if (dev) loadVite(port);
     else serveURL(mainWindow);
 }
 
-app.once('ready', createMainWindow);
-app.on('activate', () => {
-    if (!mainWindow) {
-        createMainWindow();
-    }
+app.once('ready', () => {
+    app.dock.hide();
 });
+app.on('activate', () => {
+});
+
 app.on('ready', () => {
+    createTray();
     globalShortcut.register('Escape', () => {
-        app.quit();
+        mainWindow.hide();
     });
 });
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
 
-ipcMain.on('to-main', (event, count) => {
+ipcMain.on('to-main', (_event, count) => {
     return mainWindow.webContents.send('from-main', `next count is ${count + 1}`);
 });
