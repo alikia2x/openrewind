@@ -1,0 +1,8 @@
+{
+    "settings": "设置",
+    "tray": {
+        "showMainWindow": "搜索…",
+        "showSettingsWindow": "应用设置",
+        "quit": "退出 OpenRewind"
+    }
+}

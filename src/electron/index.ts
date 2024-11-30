@@ -1,25 +1,33 @@
 import windowStateManager from 'electron-window-state';
-import { app, BrowserWindow, screen,ipcMain, globalShortcut, Tray, Menu } from 'electron';
+import { app, BrowserWindow, screen,ipcMain, globalShortcut, Tray, Menu, nativeImage } from 'electron';
 import contextMenu from 'electron-context-menu';
-import serve from 'electron-serve';
+import { join } from "path";
+import i18n from "i18next";
+import "./i18n.js";
+const t = i18n.t;
+
+const port = process.env.PORT || "5173";
+const dev = !app.isPackaged;
 
 let tray = null
 
 function createTray() {
-    // 创建托盘图标
-    tray = new Tray('./assets/icon.png')
+    const pathRoot: string = dev ? "./src/electron/assets/" : "./assets/";
+    const icon = nativeImage.createFromPath(pathRoot + 'TrayIconTemplate@2x.png');
+    icon.resize({ width: 32, height: 32 })
+    tray = new Tray(pathRoot + 'TrayIcon.png');
+    tray.setImage(icon);
 
-    // 创建托盘菜单
     const contextMenu = Menu.buildFromTemplate([
         {
-            label: '显示主窗口',
+            label: t('tray.showMainWindow'),
             click: () => {
                 if (!mainWindow) createMainWindow();
                 mainWindow!.show();
             }
         },
         {
-            label: '显示设置',
+            label: t('tray.showSettingsWindow'),
             click: () => {
                 if (!settingsWindow) createSettingsWindow();
                 settingsWindow!.show();
@@ -27,28 +35,16 @@ function createTray() {
         },
         { type: 'separator' },
         {
-            label: '退出',
+            label: t('tray.quit'),
             click: () => {
                 app.quit()
             }
         }
     ])
 
-    // 设置托盘的上下文菜单
     tray.setContextMenu(contextMenu)
-
-    // 设置托盘的提示文字
-    tray.setToolTip('我的应用程序')
-
-    // 点击托盘图标时显示主窗口
-    // tray.on('click', () => {
-    //     mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
-    // })
+    tray.setToolTip('OpenRewind')
 }
-
-const serveURL = serve({ directory: '.' });
-const port = process.env.PORT || "5173";
-const dev = !app.isPackaged;
 
 let mainWindow: BrowserWindow | null;
 let settingsWindow: BrowserWindow | null;
@@ -56,12 +52,14 @@ let settingsWindow: BrowserWindow | null;
 
 function createSettingsWindow() {
     const window = new BrowserWindow({
-        width: 400,
-        height: 600,
+        width: 650,
+        height: 550,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: true
         },
+        titleBarStyle: 'hiddenInset',
+        resizable: false,
     });
     window.once('ready-to-show', () => {
         window.show();
@@ -71,7 +69,7 @@ function createSettingsWindow() {
     settingsWindow = window;
 
     if (dev) loadVite(window ,port, "settings");
-    else serveURL(mainWindow!);
+    else settingsWindow.loadFile(join(__dirname, '../renderer/index.html/settings'));
 }
 
 contextMenu({
@@ -134,8 +132,8 @@ function createMainWindow() {
 
     mainWindow = window;
 
-    if (dev) loadVite(window, port);
-    else serveURL(mainWindow).then(()=>{});
+    if (dev) loadVite(window, port, "rewind");
+    else mainWindow.loadFile(join(__dirname, '../renderer/index.html/rewind'));
 }
 
 app.once('ready', () => {

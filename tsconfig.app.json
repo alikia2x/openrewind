@@ -23,5 +23,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/web", "src/web/**/*.ts", "src/web/**/*.tsx", "global.d.ts"],
+  "include": [
+      "src/renderer",
+      "src/renderer/**/*.ts",
+      "src/renderer/**/*.tsx", "global.d.ts", "pages/**/*.tsx"],
 }

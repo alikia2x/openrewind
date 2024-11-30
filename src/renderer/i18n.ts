@@ -1,5 +1,5 @@
 import * as en from "i18n/en.json";
-import * as zh from "i18n/zh.json";
+import * as zh from "i18n/zh-CN.json";
 import * as ja from "i18n/ja.json";
 import * as de from "i18n/de.json";
 import * as es from "i18n/es.json";

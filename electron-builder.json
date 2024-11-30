@@ -1,0 +1,26 @@
+{
+    "appId": "com.alikia2x.openrewind",
+    "mac": {
+        "category": "public.app-category.productivity",
+        "target": "dmg"
+    },
+    "productName": "OpenRewind",
+    "directories": {
+        "output": "dist/release"
+    },
+    "files": [
+        "dist/dev/**/*",
+        "dist/dev/assets/*",
+        "dist/dev/i18n/*",
+        "dist/renderer/**/*",
+        "dist/renderer/assets/*"
+    ],
+    "win": {
+        "target": "nsis"
+    },
+    "linux": {
+        "target": "AppImage"
+    },
+    "copyright": "Copyright © 2024 alikia2x",
+    "asar": false
+}

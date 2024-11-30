@@ -1,3 +1,8 @@
 {
-    "settings": "Settings"
+    "settings": "Settings",
+    "tray": {
+        "showMainWindow": "Search",
+        "showSettingsWindow": "Settings",
+        "quit": "Quit"
+    }
 }
