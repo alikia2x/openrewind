@@ -1,5 +1,19 @@
 {
-  "files": [],
+//  "files": [
+//    "src/electron/index.ts"
+//  ],
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "outDir": "./dist/dev",
+    "rootDir": "./src/electron",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/electron"],
   "references": [
     { "path": "./tsconfig.app.json"},
     { "path": "./tsconfig.node.json"}

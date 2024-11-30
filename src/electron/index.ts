@@ -15,14 +15,14 @@ function createTray() {
             label: '显示主窗口',
             click: () => {
                 if (!mainWindow) createMainWindow();
-                mainWindow.show();
+                mainWindow!.show();
             }
         },
         {
             label: '显示设置',
             click: () => {
                 if (!settingsWindow) createSettingsWindow();
-                settingsWindow.show();
+                settingsWindow!.show();
             }
         },
         { type: 'separator' },
@@ -50,8 +50,8 @@ const serveURL = serve({ directory: '.' });
 const port = process.env.PORT || "5173";
 const dev = !app.isPackaged;
 
-let mainWindow;
-let settingsWindow;
+let mainWindow: BrowserWindow | null;
+let settingsWindow: BrowserWindow | null;
 
 
 function createSettingsWindow() {
@@ -71,7 +71,7 @@ function createSettingsWindow() {
     settingsWindow = window;
 
     if (dev) loadVite(window ,port, "settings");
-    else serveURL(mainWindow);
+    else serveURL(mainWindow!);
 }
 
 contextMenu({
@@ -80,7 +80,7 @@ contextMenu({
     showCopyImage: true,
 });
 
-function loadVite(window, port, path = "") {
+function loadVite(window: BrowserWindow, port: string | undefined, path = "") {
     console.log(`http://localhost:${port}/${path}`);
     window.loadURL(`http://localhost:${port}/${path}`).catch((e) => {
         console.log('Error loading URL, retrying', e);
@@ -134,8 +134,8 @@ function createMainWindow() {
 
     mainWindow = window;
 
-    if (dev) loadVite(port);
-    else serveURL(mainWindow);
+    if (dev) loadVite(window, port);
+    else serveURL(mainWindow).then(()=>{});
 }
 
 app.once('ready', () => {
@@ -147,6 +147,7 @@ app.on('activate', () => {
 app.on('ready', () => {
     createTray();
     globalShortcut.register('Escape', () => {
+        if (!mainWindow) return;
         mainWindow.hide();
     });
 });
@@ -155,5 +156,6 @@ app.on('window-all-closed', () => {
 });
 
 ipcMain.on('to-main', (_event, count) => {
+    if (!mainWindow) return;
     return mainWindow.webContents.send('from-main', `next count is ${count + 1}`);
 });
