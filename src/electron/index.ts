@@ -63,7 +63,7 @@ function createTray() {
 		{
 			label: t("tray.quit"),
 			click: () => {
-				app.quit();
+				app.exit();
 			}
 		}
 	]);
@@ -93,6 +93,6 @@ app.on("ready", () => {
 		mainWindow.hide();
 	});
 });
-app.on("window-all-closed", () => {
-	if (process.platform !== "darwin") app.quit();
-});
+// app.on("window-all-closed", () => {
+// 	if (process.platform !== "darwin") app.quit();
+// });
