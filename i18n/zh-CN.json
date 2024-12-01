@@ -1,5 +1,19 @@
 {
-    "settings": "设置",
+    "settings": {
+        "title": "设置",
+        "about": "关于",
+        "screen": "屏幕",
+        "screen-recording": "屏幕录制",
+        "version": "版本 {version}",
+        "copyright": "版权所有 © 2024 alikia2x",
+        "note": "OpenRewind 是基于<1>AGPL 3.0</1>授权的开源软件， <3></3>其源代码托管在<5>GitHub</5>上。",
+        "environment-details": "运行环境",
+        "node-version": "Node.js 版本",
+        "electron-version": "Electron 版本",
+        "chrome-version": "Chrome 版本",
+        "os-version": "系统版本",
+        "os": "操作系统"
+    },
     "tray": {
         "showMainWindow": "搜索…",
         "showSettingsWindow": "应用设置",

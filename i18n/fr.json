@@ -1,2 +1,8 @@
 {
+  "settings": "Paramètres",
+  "tray": {
+    "quit": "Quitter",
+    "showMainWindow": "Recherche",
+    "showSettingsWindow": "Paramètres"
+  }
 }

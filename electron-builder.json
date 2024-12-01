@@ -2,7 +2,10 @@
     "appId": "com.alikia2x.openrewind",
     "mac": {
         "category": "public.app-category.productivity",
-        "target": "dmg"
+        "target": "dmg",
+        "files": [
+            "bin/macos"
+        ]
     },
     "productName": "OpenRewind",
     "directories": {

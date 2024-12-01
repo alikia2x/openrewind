@@ -1,5 +1,19 @@
 {
-    "settings": "Settings",
+    "settings": {
+        "title": "Settings",
+        "about": "About",
+        "screen": "Screen",
+        "screen-recording": "Screen Recording",
+        "version": "Version {version}",
+        "copyright": "Copyright © 2024 alikia2x",
+        "note": "OpenRewind is an open source software licensed under <1>AGPL 3.0</1>, <3></3>and its source code is avaliable at <5>GitHub</5>.",
+        "environment-details": "Environment Info",
+        "node-version": "Node.js Version",
+        "electron-version": "Electron Version",
+        "chrome-version": "Chrome Version",
+        "os-version": "OS Version",
+        "os": "Operating System"
+    },
     "tray": {
         "showMainWindow": "Search",
         "showSettingsWindow": "Settings",

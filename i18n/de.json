@@ -1,2 +1,8 @@
 {
+  "settings": "Einstellungen",
+  "tray": {
+    "quit": "Aufhören",
+    "showMainWindow": "Suchen",
+    "showSettingsWindow": "Einstellungen"
+  }
 }

@@ -1,3 +1,8 @@
 {
-
+  "settings": "設定",
+  "tray": {
+    "quit": "やめる",
+    "showMainWindow": "検索",
+    "showSettingsWindow": "設定"
+  }
 }

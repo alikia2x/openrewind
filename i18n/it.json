@@ -1,2 +1,8 @@
 {
+  "settings": "Impostazioni",
+  "tray": {
+    "quit": "Esentato",
+    "showMainWindow": "Ricerca",
+    "showSettingsWindow": "Impostazioni"
+  }
 }

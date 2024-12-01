@@ -1,6 +1,6 @@
 {
   "name": "openrewind",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "description": "Your second brain, superpowered.",
   "main": "dist/dev/index.js",
@@ -9,9 +9,8 @@
     "dev:all": "concurrently -n=react,electron -c='#ff3e00',blue \"bun run dev:react\" \"bun run dev:electron\"",
     "dev:react": "vite dev",
     "dev:electron": "bunx gulp build && electron dist/dev/index.js",
-    "build": "cross-env NODE_ENV=production bun run build:all",
-    "build:all": "concurrently -n=react,electron -c='#ff3e00',blue \"bun run build:react\" \"bun run build:electron\"",
     "build:react": "vite build",
+    "build:app": "bunx gulp build",
     "build:electron": "electron-builder",
     "start": "cross-env NODE_ENV=production bun run start:all"
   },
@@ -22,8 +21,13 @@
     "@unly/universal-language-detector": "^2.0.3",
     "electron-context-menu": "^4.0.4",
     "electron-reloader": "^1.2.3",
+    "electron-screencapture": "^1.1.0",
     "electron-serve": "^2.1.1",
+    "electron-store": "^10.0.0",
     "electron-window-state": "^5.0.3",
+    "execa": "^9.5.1",
+    "ffmpeg-static": "^5.2.0",
+    "fluent-ffmpeg": "^2.1.3",
     "i18next": "^24.0.2",
     "i18next-browser-languagedetector": "^8.0.0",
     "i18next-electron-fs-backend": "^3.0.2",
@@ -32,15 +36,19 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^15.1.2",
+    "react-router": "^7.0.1",
     "react-router-dom": "^7.0.1",
     "vite-tsconfig-paths": "^5.1.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
+    "@iconify-icon/react": "^2.1.0",
+    "@types/fluent-ffmpeg": "^2.1.27",
     "@types/gulp": "^4.0.17",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.19",
     "concurrently": "^9.0.1",
     "cross-env": "^7.0.3",
     "del": "^8.0.0",
@@ -53,11 +61,11 @@
     "gulp": "^5.0.0",
     "gulp-clean": "^0.4.0",
     "gulp-typescript": "6.0.0-alpha.1",
+    "postcss": "^8.4.38",
     "tailwindcss": "^3.4.15",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.11.0",
     "vite": "^5.4.10",
-    "postcss": "^8.4.38",
-    "autoprefixer": "^10.4.19"
+    "vite-plugin-chunk-split": "^0.5.0"
   }
 }

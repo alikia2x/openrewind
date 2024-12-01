@@ -1,7 +1,4 @@
 {
-//  "files": [
-//    "src/electron/index.ts"
-//  ],
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",

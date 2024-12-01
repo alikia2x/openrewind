@@ -1,3 +1,8 @@
 {
-
+  "settings": "설정",
+  "tray": {
+    "quit": "그만두다",
+    "showMainWindow": "찾다",
+    "showSettingsWindow": "설정"
+  }
 }

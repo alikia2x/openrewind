@@ -153,3 +153,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+bin

@@ -1,12 +1,9 @@
 import { join } from "path";
 import i18n from "i18next";
 import fs from "fs";
-import { fileURLToPath } from 'url'
-import path from 'path'
+import { app } from "electron";
+import { __dirname } from "./utils.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-import { app } from 'electron';
 
 /**
  * Selects the appropriate language based on system preferences and available languages
@@ -26,7 +23,7 @@ export function detectLanguage(langs: string[], fallback: string): string {
 	// Find a matching language
 	const matchedLanguage = langs.find(lang => {
 		if (lang.indexOf(normalizedLang) !== -1) {
-			return lang
+			return lang;
 		}
 	});
 
@@ -34,26 +31,26 @@ export function detectLanguage(langs: string[], fallback: string): string {
 	return matchedLanguage || fallback;
 }
 
-const languages = ['en', 'de', 'es', 'fr', 'it', 'ja', 'ar', 'ko', 'zh-CN'];
+export default function initI18n() {
+	const languages = ["en", "de", "es", "fr", "it", "ja", "ar", "ko", "zh-CN"];
 
-const l = detectLanguage(languages, "en");
+	const l = detectLanguage(languages, "en");
 
+	const resources = languages.reduce((acc: { [key: string]: { translation: any } }, lang) => {
+		acc[lang] = {
+			translation: JSON.parse(fs.readFileSync(join(__dirname, `./i18n/${lang}.json`), "utf8"))
+		};
+		return acc;
+	}, {});
 
-const resources = languages.reduce((acc: { [key: string]: { translation: any } }, lang) => {
-	acc[lang] = {
-		translation: JSON.parse(fs.readFileSync(join(__dirname, `./i18n/${lang}.json`), 'utf8'))
-	};
-	return acc;
-}, {});
+	i18n.init({
+		resources,
+		lng: l,
+		fallbackLng: "en",
+		interpolation: {
+			escapeValue: false // react already safes from xss => https://www.i18next.com/translation-function/interpolation#unescape
+		}
+	});
+	return i18n;
+}
 
-
-i18n.init({
-	resources,
-	lng: l,
-	fallbackLng: "en",
-	interpolation: {
-		escapeValue: false // react already safes from xss => https://www.i18next.com/translation-function/interpolation#unescape
-	},
-});
-
-const t = i18n.t;

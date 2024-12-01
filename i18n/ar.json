@@ -1,3 +1,8 @@
 {
-
+  "settings": "إعدادات",
+  "tray": {
+    "quit": "يترك",
+    "showMainWindow": "يبحث",
+    "showSettingsWindow": "إعدادات"
+  }
 }

@@ -12,6 +12,7 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -26,5 +27,9 @@
   "include": [
       "src/renderer",
       "src/renderer/**/*.ts",
-      "src/renderer/**/*.tsx", "global.d.ts", "pages/**/*.tsx"],
+      "src/renderer/**/*.tsx",
+      "src/global.d.ts",
+      "pages/**/*.tsx",
+      "components/**/*.tsx"
+  ],
 }
