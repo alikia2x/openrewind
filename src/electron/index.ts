@@ -1,10 +1,12 @@
-import { app, BrowserWindow, globalShortcut, Menu, nativeImage, Tray } from "electron";
+import { app, BrowserWindow, globalShortcut, Menu, nativeImage, screen, Tray } from "electron";
 import contextMenu from "electron-context-menu";
 import { join } from "path";
 import initI18n from "./i18n.js";
 import { createMainWindow, createSettingsWindow } from "./createWindow.js";
-import { __dirname, captureScreen, getFirstCaptureScreenDeviceId } from "./utils.js";
-import * as fs from "fs";
+import { initDatabase } from "./backend/init.js";
+import { Database } from "better-sqlite3";
+import { startScreenshotLoop } from "./backend/screenshot.js";
+import { __dirname } from "./dirname.js";
 
 const i18n = initI18n();
 
@@ -12,19 +14,12 @@ const t = i18n.t.bind(i18n);
 const port = process.env.PORT || "5173";
 const dev = !app.isPackaged;
 
-let tray = null;
+let tray: null | Tray = null;
+let dbConnection: null | Database = null;
+let screenshotInterval: null | NodeJS.Timeout = null;
 
-async function c() {
-	const screenshotpath = join(__dirname, "screenshot.png");
-	const ffmpegPath = join(__dirname, dev ? "bin/macos/ffmpeg" : "../../bin/macos/ffmpeg");
-	const deviceID = await getFirstCaptureScreenDeviceId(ffmpegPath);
-	if (deviceID) {
-		await captureScreen(ffmpegPath, deviceID, screenshotpath);
-		const screenshotData = fs.readFileSync(screenshotpath, "base64");
-		return screenshotData;
-	}
-	return null;
-}
+let mainWindow: BrowserWindow | null;
+let settingsWindow: BrowserWindow | null;
 
 function createTray() {
 	const pathRoot: string = dev ? "./src/electron/assets/" : join(__dirname, "./assets/");
@@ -36,26 +31,18 @@ function createTray() {
 	const contextMenu = Menu.buildFromTemplate([
 		{
 			label: t("tray.showMainWindow"),
-			click: async () => {
-				if (!mainWindow) mainWindow = createMainWindow(port, () => (mainWindow = null));
-				mainWindow!.webContents.send("fromMain", null);
-				mainWindow!.setIgnoreMouseEvents(true);
+			click: () => {
+				const display = screen.getPrimaryDisplay();
+				const { width, height } = display.bounds;
 				mainWindow!.show();
-				c()
-					.then((data) => {
-						mainWindow!.webContents.send("fromMain", data);
-						mainWindow!.setIgnoreMouseEvents(false);
-					})
-					.catch((err) => {
-						console.error(err);
-					});
+				mainWindow!.setAlwaysOnTop(true, "screen-saver");
+				mainWindow!.setBounds({ x: 0, y: 0, width, height });
+				mainWindow!.focus();
 			}
 		},
 		{
 			label: t("tray.showSettingsWindow"),
 			click: () => {
-				if (!settingsWindow)
-					settingsWindow = createSettingsWindow(port, () => (settingsWindow = null));
 				settingsWindow!.show();
 			}
 		},
@@ -72,9 +59,6 @@ function createTray() {
 	tray.setToolTip("OpenRewind");
 }
 
-let mainWindow: BrowserWindow | null;
-let settingsWindow: BrowserWindow | null;
-
 contextMenu({
 	showLookUpSelection: true,
 	showSearchWithGoogle: true,
@@ -88,8 +72,12 @@ app.on("activate", () => {});
 
 app.on("ready", () => {
 	createTray();
+	dbConnection = initDatabase();
+	screenshotInterval = startScreenshotLoop(dbConnection);
+	mainWindow = createMainWindow(port, () => (mainWindow = null));
+	settingsWindow = createSettingsWindow(port, () => (settingsWindow = null));
 	globalShortcut.register("Escape", () => {
-		if (!mainWindow) return;
+		if (!mainWindow || !mainWindow.isVisible()) return;
 		mainWindow.hide();
 	});
 });

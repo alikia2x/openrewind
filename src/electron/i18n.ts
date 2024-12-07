@@ -2,7 +2,7 @@ import { join } from "path";
 import i18n from "i18next";
 import fs from "fs";
 import { app } from "electron";
-import { __dirname } from "./utils.js";
+import { __dirname } from "./dirname.js";
 
 
 /**

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, screen } from "electron";
 import { join } from "path";
-import { __dirname } from "./utils.js";
+import { __dirname } from "./dirname.js";
 import windowStateManager from "electron-window-state";
 
 function loadURL(window: BrowserWindow, path = "", vitePort: string) {
@@ -34,11 +34,11 @@ export function createSettingsWindow(vitePort: string, closeCallBack: Function) 
 		},
 		titleBarStyle: "hiddenInset",
 		resizable: false,
+		show: false,
 	});
 	windowState.manage(window);
-	window.once("ready-to-show", () => {
-		window.show();
-		window.focus();
+	window.on("show", () => {
+		app.dock.show();
 	});
 	window.on("close", (e) => {
 		window.hide();
@@ -46,7 +46,8 @@ export function createSettingsWindow(vitePort: string, closeCallBack: Function) 
 		e.preventDefault();
 	});
 	window.once("close", () => {
-		window.hide()
+		window.hide();
+		app.dock.hide();
 	});
 	loadURL(window, "settings", vitePort);
 	return window;
@@ -77,16 +78,10 @@ export function createMainWindow(vitePort: string, closeCallBack: Function) {
 		},
 		roundedCorners: false,
 		transparent: true,
+		show: false
 	});
 
 	windowState.manage(window);
-
-	window.once("ready-to-show", () => {
-		window.show();
-		window.setAlwaysOnTop(true, "screen-saver");
-		window.setBounds({ x: 0, y: 0, width, height });
-		window.focus();
-	});
 
 	window.on("close", () => {
 		windowState.saveState(window);
