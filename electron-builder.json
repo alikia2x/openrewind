@@ -12,14 +12,17 @@
         "output": "dist/release"
     },
     "files": [
-        "dist/dev/**/*",
-        "dist/dev/assets/*",
-        "dist/dev/i18n/*",
+        "dist/electron/**/*",
+        "dist/electron/assets/*",
+        "dist/electron/i18n/*",
         "dist/renderer/**/*",
         "dist/renderer/assets/*"
     ],
     "win": {
-        "target": "nsis"
+        "target": "nsis",
+        "files": [
+            "bin/win32"
+        ]
     },
     "linux": {
         "target": "AppImage"

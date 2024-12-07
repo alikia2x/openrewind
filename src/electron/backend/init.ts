@@ -3,8 +3,17 @@ import Database from "better-sqlite3";
 import { __dirname } from "../dirname.js";
 import { getDatabasePath } from "../utils/backend.js";
 
-function getLibSimpleExtensionPath(): string {
-	return path.join(__dirname, "bin", process.platform, "libsimple/libsimple.dylib");
+function getLibSimpleExtensionPath() {
+    switch (process.platform) {
+        case "win32":
+            return path.join(__dirname, "bin", process.platform, "libsimple", "simple.dll");
+        case "darwin":
+            return path.join(__dirname, "bin", process.platform, "libsimple", "libsimple.dylib");
+        case "linux":
+            return path.join(__dirname, "bin", process.platform, "libsimple", "libsimple.so");
+        default:
+            throw new Error("Unsupported platform");
+    }
 }
 
 export function initDatabase() {

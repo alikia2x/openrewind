@@ -2,6 +2,7 @@ import { app, BrowserWindow, screen } from "electron";
 import { join } from "path";
 import { __dirname } from "./dirname.js";
 import windowStateManager from "electron-window-state";
+import { hideDock, showDock } from "./utils/electron.js";
 
 function loadURL(window: BrowserWindow, path = "", vitePort: string) {
 	const dev = !app.isPackaged;
@@ -24,6 +25,21 @@ export function createSettingsWindow(vitePort: string, closeCallBack: Function) 
 		defaultWidth: 650,
 		defaultHeight: 550
 	});
+	const enableFrame = process.platform === "darwin";
+	let icon
+	switch (process.platform) {
+	    case "darwin":
+			icon = undefined;
+			break;
+		case "win32":
+			icon = join(__dirname, "assets/icon.ico");
+			break;
+		case "linux":
+			icon = join(__dirname, "assets/icon.png");
+			break;
+		default:
+			icon = undefined;
+	}
 	const window = new BrowserWindow({
 		width: 650,
 		height: 550,
@@ -35,10 +51,12 @@ export function createSettingsWindow(vitePort: string, closeCallBack: Function) 
 		titleBarStyle: "hiddenInset",
 		resizable: false,
 		show: false,
+		frame: enableFrame,
+		icon: icon,
 	});
 	windowState.manage(window);
 	window.on("show", () => {
-		app.dock.show();
+		showDock();
 	});
 	window.on("close", (e) => {
 		window.hide();
@@ -47,7 +65,7 @@ export function createSettingsWindow(vitePort: string, closeCallBack: Function) 
 	});
 	window.once("close", () => {
 		window.hide();
-		app.dock.hide();
+		hideDock();
 	});
 	loadURL(window, "settings", vitePort);
 	return window;

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, globalShortcut, Menu, nativeImage, screen, Tray } from "electron";
+import { app, BrowserWindow, globalShortcut, ipcMain, Menu, nativeImage, screen, Tray } from "electron";
 import contextMenu from "electron-context-menu";
 import { join } from "path";
 import initI18n from "./i18n.js";
@@ -7,6 +7,7 @@ import { initDatabase } from "./backend/init.js";
 import { Database } from "better-sqlite3";
 import { startScreenshotLoop } from "./backend/screenshot.js";
 import { __dirname } from "./dirname.js";
+import { hideDock } from "./utils/electron.js";
 
 const i18n = initI18n();
 
@@ -66,7 +67,7 @@ contextMenu({
 });
 
 app.once("ready", () => {
-	app.dock.hide();
+	hideDock();
 });
 app.on("activate", () => {});
 
@@ -84,3 +85,7 @@ app.on("ready", () => {
 // app.on("window-all-closed", () => {
 // 	if (process.platform !== "darwin") app.quit();
 // });
+
+ipcMain.on('close-settings', () => {
+	settingsWindow?.hide();
+});
