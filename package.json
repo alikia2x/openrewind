@@ -1,6 +1,6 @@
 {
   "name": "openrewind",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "type": "module",
   "description": "Your second brain, superpowered.",
   "main": "dist/electron/index.js",

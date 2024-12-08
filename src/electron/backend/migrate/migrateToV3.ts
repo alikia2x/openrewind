@@ -110,7 +110,7 @@ function transformSegments(db: Database) {
 
 function renameColumn(tableName: string, oldColumnName: string, newColumnName: string, db: Database) {
 	if (db.prepare(`SELECT 1 FROM pragma_table_info(?) WHERE name=?`).get([tableName, oldColumnName])) {
-		db.prepare(`ALTER TABLE ? RENAME COLUMN ? TO ?`).run([tableName, oldColumnName, newColumnName]);
+		db.exec(`ALTER TABLE ${tableName} RENAME COLUMN ${oldColumnName} TO ${newColumnName};`);
 	}
 }
 
