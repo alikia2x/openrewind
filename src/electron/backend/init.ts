@@ -1,7 +1,10 @@
 import * as path from "path";
-import Database from "better-sqlite3";
+import { Database } from "better-sqlite3";
+import DB from "better-sqlite3";
 import { __dirname } from "../dirname.js";
-import { getDatabasePath } from "../utils/backend.js";
+import { getDatabaseDir } from "../utils/backend.js";
+import { migrate } from "./migrate/index.js";
+import { initSchemaInV2 } from "./migrate/migrateToV2";
 
 function getLibSimpleExtensionPath() {
     switch (process.platform) {
@@ -16,13 +19,12 @@ function getLibSimpleExtensionPath() {
     }
 }
 
-export function initDatabase() {
-	const dbPath = getDatabasePath();
-	const db = new Database(dbPath, { verbose: console.log });
-	const libSimpleExtensionPath = getLibSimpleExtensionPath();
+function databaseInitialized(db: Database) {
+	return db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='frame';`).get()
+		!== undefined;
+}
 
-	db.loadExtension(libSimpleExtensionPath);
-
+function init(db: Database) {
 	db.exec(`
         CREATE TABLE IF NOT EXISTS frame (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,6 +96,23 @@ export function initDatabase() {
             DELETE FROM text_search WHERE id = OLD.id;
         END;
     `);
+
+	initSchemaInV2(db);
+}
+
+export function initDatabase() {
+	const dbPath = getDatabaseDir();
+	const db = new DB(dbPath, { verbose: console.log });
+	const libSimpleExtensionPath = getLibSimpleExtensionPath();
+
+	db.loadExtension(libSimpleExtensionPath);
+
+	if (!databaseInitialized(db)) {
+		init(db);
+	}
+	else {
+		migrate(db);
+	}
 
 	return db;
 }

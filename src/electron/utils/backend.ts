@@ -31,12 +31,12 @@ export function createTempDir() {
 	return tempDir;
 }
 
-export function getDatabasePath() {
+export function getDatabaseDir() {
 	const dataDir = createDataDir();
 	return path.join(dataDir, "main.db");
 }
 
-export function getScreenshotsPath() {
+export function getScreenshotsDir() {
 	const tempDir = createTempDir();
 	const screenshotsDir = path.join(tempDir, "screenshots");
 	if (!fs.existsSync(screenshotsDir)) {
@@ -45,7 +45,7 @@ export function getScreenshotsPath() {
 	return screenshotsDir;
 }
 
-export function getRecordingsPath() {
+export function getRecordingsDir() {
 	const dataDir = createDataDir();
 	return path.join(dataDir, "recordings");
 }
