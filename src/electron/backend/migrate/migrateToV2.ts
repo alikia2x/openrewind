@@ -11,7 +11,7 @@ interface OldFrame {
 	encoded: number;
 }
 
-export function initSchemaInV2(db: Database) {
+function initSchemaInV2(db: Database) {
 	db.exec(`
 		CREATE TABLE config (
 			key TEXT PRIMARY KEY,

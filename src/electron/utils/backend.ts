@@ -49,3 +49,12 @@ export function getRecordingsDir() {
 	const dataDir = createDataDir();
 	return path.join(dataDir, "recordings");
 }
+
+export function getEncodingTempDir() {
+	const tempDir = createTempDir();
+	const encodingTempDir = path.join(tempDir, "encoding");
+	if (!fs.existsSync(encodingTempDir)) {
+		fs.mkdirSync(encodingTempDir, { recursive: true });
+	}
+	return encodingTempDir;
+}

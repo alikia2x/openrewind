@@ -12,8 +12,8 @@ export function startScreenshotLoop(db: Database) {
 		const screenshotPath = join(screenshotDir, filename);
 		screenshot({filename: screenshotPath, format: "png"}).then((absolutePath) => {
 			const SQL = SqlString.format(
-				"INSERT INTO frame (imgFilename) VALUES (?)",
-				[filename]
+				"INSERT INTO frame (imgFilename, createdAt) VALUES (?, ?)",
+				[filename, new Date().getTime() / 1000]
 			);
 			db.exec(SQL);
 		}).catch((err) => {

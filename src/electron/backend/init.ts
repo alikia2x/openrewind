@@ -4,7 +4,6 @@ import DB from "better-sqlite3";
 import { __dirname } from "../dirname.js";
 import { getDatabaseDir } from "../utils/backend.js";
 import { migrate } from "./migrate/index.js";
-import { initSchemaInV2 } from "./migrate/migrateToV2";
 
 function getLibSimpleExtensionPath() {
     switch (process.platform) {
@@ -28,14 +27,14 @@ function init(db: Database) {
 	db.exec(`
         CREATE TABLE IF NOT EXISTS frame (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            createdAt REAL,
             imgFilename TEXT,
             segmentID INTEGER NULL,
             videoPath TEXT NULL,
             videoFrameIndex INTEGER NULL,
             collectionID INTEGER NULL,
-            encoded BOOLEAN DEFAULT 0,
-            FOREIGN KEY (segmentID) REFERENCES segements (id)
+            encodeStatus INTEGER DEFAULT 0,
+            FOREIGN KEY (segmentID) REFERENCES segments (id)
         );
     `);
 
@@ -50,10 +49,10 @@ function init(db: Database) {
     `);
 
 	db.exec(`
-        CREATE TABLE IF NOT EXISTS segements(
+        CREATE TABLE IF NOT EXISTS segments(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            startAt TIMESTAMP,
-            endAt TIMESTAMP,
+            startedAt REAL,
+            endedAt REAL,
             title TEXT,
             appName TEXT,
             appPath TEXT,
@@ -97,10 +96,49 @@ function init(db: Database) {
         END;
     `);
 
-	initSchemaInV2(db);
+	db.exec(`
+		CREATE TABLE config (
+			key TEXT PRIMARY KEY,
+			value TEXT
+		);
+	`);
+
+	db.exec(`
+		CREATE TABLE IF NOT EXISTS encoding_task (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			createdAt REAL,
+			status INT DEFAULT 0
+		);
+	`);
+
+	db.exec(`
+		CREATE TABLE IF NOT EXISTS encoding_task_data (
+			encodingTaskID INTEGER,
+			frame ID INTEGER PRIMARY KEY,
+			FOREIGN KEY (encodingTaskID) REFERENCES encoding_task(id),
+			FOREIGN KEY (frame) REFERENCES frame(id)
+		);				
+	`);
+
+	db.exec(`
+		CREATE TRIGGER IF NOT EXISTS delete_encoding_task 
+		AFTER UPDATE OF status
+		ON encoding_task
+		BEGIN
+		  DELETE FROM encoding_task_data
+		  WHERE encodingTaskID = OLD.id AND NEW.status = 2;
+		
+		  DELETE FROM encoding_task
+		  WHERE id = OLD.id AND NEW.status = 2;
+		END;
+	`);
+
+	db.exec(`
+		INSERT INTO config (key, value) VALUES ('version', '3');
+	`);
 }
 
-export function initDatabase() {
+export async function initDatabase() {
 	const dbPath = getDatabaseDir();
 	const db = new DB(dbPath, { verbose: console.log });
 	const libSimpleExtensionPath = getLibSimpleExtensionPath();
@@ -113,6 +151,8 @@ export function initDatabase() {
 	else {
 		migrate(db);
 	}
+
+	db.exec("PRAGMA journal_mode=WAL;");
 
 	return db;
 }
