@@ -1,6 +1,7 @@
 import path from "path";
 import os from "os";
 import fs from "fs";
+import { __dirname } from "../dirname.js";
 
 export function getUserDataDir() {
 	switch (process.platform) {
@@ -47,6 +48,10 @@ export function getScreenshotsDir() {
 
 export function getRecordingsDir() {
 	const dataDir = createDataDir();
+	const recordingsDir = path.join(dataDir, "recordings");
+	if (!fs.existsSync(recordingsDir)) {
+		fs.mkdirSync(recordingsDir, { recursive: true });
+	}
 	return path.join(dataDir, "recordings");
 }
 
@@ -57,4 +62,17 @@ export function getEncodingTempDir() {
 		fs.mkdirSync(encodingTempDir, { recursive: true });
 	}
 	return encodingTempDir;
+}
+
+export function getFFmpegPath() {
+	switch (process.platform) {
+		case "win32":
+			return path.join(__dirname, "bin", process.platform, "ffmpeg.exe");
+		case "darwin":
+			return path.join(__dirname, "bin", process.platform, "ffmpeg");
+		case "linux":
+			return path.join(__dirname, "bin", process.platform, "ffmpeg");
+		default:
+			throw new Error("Unsupported platform");
+	}
 }

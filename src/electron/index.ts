@@ -8,7 +8,7 @@ import { Database } from "better-sqlite3";
 import { startScreenshotLoop } from "./backend/screenshot.js";
 import { __dirname } from "./dirname.js";
 import { hideDock } from "./utils/electron.js";
-import { checkFramesForEncoding } from "./backend/encoding.js";
+import { checkFramesForEncoding, deleteEncodedScreenshots, processEncodingTasks } from "./backend/encoding.js";
 
 const i18n = initI18n();
 
@@ -76,7 +76,9 @@ app.on("ready", () => {
 	createTray();
 	initDatabase().then((db) => {
 		screenshotInterval = startScreenshotLoop(db);
-		setInterval(checkFramesForEncoding, 10000, db);
+		setInterval(checkFramesForEncoding, 5000, db);
+		setInterval(processEncodingTasks, 10000, db);
+		setInterval(deleteEncodedScreenshots, 5000, db)
 		dbConnection = db;
 	});
 	mainWindow = createMainWindow(port, () => (mainWindow = null));

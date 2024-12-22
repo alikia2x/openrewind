@@ -1,14 +1,15 @@
-import { Database } from 'better-sqlite3';
-import { exec } from 'child_process';
-import fs from 'fs';
+import { Database } from "better-sqlite3";
+import { exec, spawnSync } from "child_process";
+import fs from "fs";
 import path, { join } from "path";
 import type { EncodingTask, Frame } from "./schema";
 import sizeOf from "image-size";
-import { getScreenshotsDir } from "../utils/backend.js";
+import { getEncodingTempDir, getRecordingsDir, getScreenshotsDir } from "../utils/backend.js";
+import cache from "memory-cache";
 
 const ENCODING_INTERVAL = 10000; // 10 sec
 const CHECK_TASK_INTERVAL = 5000; // 5 sec
-const MIN_FRAMES_TO_ENCODE = 300; // At least 10 mins (0.5fps)
+const MIN_FRAMES_TO_ENCODE = 60; // At least 10 mins (0.5fps)
 const CONCURRENCY = 1; // Number of concurrent encoding tasks
 
 // Detect and insert encoding tasks
@@ -59,9 +60,25 @@ export function checkFramesForEncoding(db: Database) {
 	}
 }
 
-// TODO: Fix this function
+export async function deleteEncodedScreenshots(db: Database) {
+	const stmt = db.prepare(`
+	    SELECT * FROM frame WHERE encodeStatus = 2 AND imgFilename IS NOT NULL;
+	`);
+	const frames = stmt.all() as Frame[];
+	for (const frame of frames) {
+		fs.unlinkSync(path.join(getScreenshotsDir(), frame.imgFilename));
+		const updateStmt = db.prepare(`
+			UPDATE frame SET imgFilename = NULL WHERE id = ?;
+		`);
+		updateStmt.run(frame.id);
+	}
+}
+
 // Check and process encoding task
-function processEncodingTasks(db: Database) {
+export function processEncodingTasks(db: Database) {
+	const tasksPerforming = cache.get("tasksPerforming") as string[] || [];
+	if (tasksPerforming.length >= CONCURRENCY) return;
+
 	const stmt = db.prepare(`
         SELECT id, status
         FROM encoding_task
@@ -69,10 +86,12 @@ function processEncodingTasks(db: Database) {
         LIMIT ?
     `);
 
-	const tasks = stmt.all(CONCURRENCY) as EncodingTask[];
+	const tasks = stmt.all(CONCURRENCY - tasksPerforming.length) as EncodingTask[];
 
 	for (const task of tasks) {
 		const taskId = task.id;
+		// Create transaction
+		db.prepare(`BEGIN TRANSACTION;`).run();
 
 		// Update task status as processing (1)
 		const updateStmt = db.prepare(`
@@ -81,37 +100,45 @@ function processEncodingTasks(db: Database) {
 		updateStmt.run(taskId);
 
 		const framesStmt = db.prepare(`
-            SELECT frame.imgFilename
+            SELECT frame.imgFilename, frame.id
             FROM encoding_task_data
             JOIN frame ON encoding_task_data.frame = frame.id
             WHERE encoding_task_data.encodingTaskID = ?
-            ORDER BY frame.createAt ASC
+            ORDER BY frame.createdAt ASC
         `);
 		const frames = framesStmt.all(taskId) as Frame[];
 
-		const metaFilePath = path.join(__dirname, `${taskId}_meta.txt`);
-		const metaContent = frames.map(frame => `file '${frame.imgFilename}'`).join('\n');
+		const metaFilePath = path.join(getEncodingTempDir(), `${taskId}_meta.txt`);
+		const metaContent = frames.map(frame => `file '${path.join(getScreenshotsDir(), frame.imgFilename)}'\nduration 0.03333`).join("\n");
 		fs.writeFileSync(metaFilePath, metaContent);
+		cache.put("tasksPerforming", [...tasksPerforming, taskId.toString()]);
 
-		const videoName = `video_${taskId}.mp4`;
-		const ffmpegCommand = `ffmpeg -f concat -safe 0 -i ${metaFilePath} -c:v libx264 -r 30 ${videoName}`;
+		const videoPath = path.join(getRecordingsDir(), `${taskId}.mp4`);
+		const ffmpegCommand = `ffmpeg -f concat -safe 0 -i "${metaFilePath}" -c:v libx264 -r 30 "${videoPath}"`;
+		console.log("FFMPEG", ffmpegCommand);
 		exec(ffmpegCommand, (error, stdout, stderr) => {
 			if (error) {
 				console.error(`FFmpeg error: ${error.message}`);
-				// Set task status to unprocessed (0)
-				const failStmt = db.prepare(`
-                    UPDATE encoding_task SET status = 0 WHERE id = ?
-                `);
-				failStmt.run(taskId);
+				// Roll back transaction
+				db.prepare(`ROLLBACK;`).run();
 			} else {
-				console.log(`Video ${videoName} created successfully`);
+				console.log(`Video ${videoPath} created successfully`);
 				// Update task status to complete (2)
 				const completeStmt = db.prepare(`
                     UPDATE encoding_task SET status = 2 WHERE id = ?
                 `);
 				completeStmt.run(taskId);
-			}
+				for (let frameIndex = 0; frameIndex < frames.length; frameIndex++) {
+					const frame = frames[frameIndex];
+					const updateFrameStmt = db.prepare(`
+					    UPDATE frame SET videoPath = ?, videoFrameIndex = ?, encodeStatus = 2 WHERE id = ?
+					`);
+					updateFrameStmt.run(`${taskId}.mp4`, frameIndex, frame.id);
+				}
+				db.prepare(`COMMIT;`).run();
 
+			}
+			cache.put("tasksPerforming", tasksPerforming.filter(id => id !== taskId.toString()));
 			fs.unlinkSync(metaFilePath);
 		});
 	}

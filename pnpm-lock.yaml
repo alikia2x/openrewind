@@ -56,6 +56,9 @@ importers:
       image-size:
         specifier: ^1.1.1
         version: 1.1.1
+      memory-cache:
+        specifier: ^0.2.0
+        version: 0.2.0
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -99,6 +102,9 @@ importers:
       '@types/gulp':
         specifier: ^4.0.17
         version: 4.0.17
+      '@types/memory-cache':
+        specifier: ^0.2.6
+        version: 0.2.6
       '@types/react':
         specifier: ^18.3.12
         version: 18.3.14
@@ -776,6 +782,9 @@ packages:
 
   '@types/keyv@3.1.4':
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
+
+  '@types/memory-cache@0.2.6':
+    resolution: {integrity: sha512-G+9tuwWqss2hvX+T/RNY9CY8qSvuCx8uwnl+tXQWwXtBelXUGcn4j6zknDR+2EfdrgBsMZik0jCKNlDEHIBONQ==}
 
   '@types/ms@0.7.34':
     resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
@@ -2655,6 +2664,9 @@ packages:
   matcher@3.0.0:
     resolution: {integrity: sha512-OkeDaAZ/bQCxeFAozM55PKcKU0yJMPGifLwV4Qgjitu+5MoAfSQN4lsLJeXZ1b8w0x+/Emda6MZgXS1jvsapng==}
     engines: {node: '>=10'}
+
+  memory-cache@0.2.0:
+    resolution: {integrity: sha512-OcjA+jzjOYzKmKS6IQVALHLVz+rNTMPoJvCztFaZxwG14wtAW7VRZjwTQu06vKCYOxh4jVnik7ya0SXTB0W+xA==}
 
   merge2@1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
@@ -4662,6 +4674,8 @@ snapshots:
   '@types/keyv@3.1.4':
     dependencies:
       '@types/node': 22.10.1
+
+  '@types/memory-cache@0.2.6': {}
 
   '@types/ms@0.7.34': {}
 
@@ -6864,6 +6878,8 @@ snapshots:
     dependencies:
       escape-string-regexp: 4.0.0
     optional: true
+
+  memory-cache@0.2.0: {}
 
   merge2@1.4.1: {}
 

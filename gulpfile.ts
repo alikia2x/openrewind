@@ -1,5 +1,6 @@
 import gulp from "gulp";
 import ts from "gulp-typescript";
+// @ts-ignore
 import clean from "gulp-clean";
 import fs from "fs";
 
