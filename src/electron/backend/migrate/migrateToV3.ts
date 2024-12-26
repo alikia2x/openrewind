@@ -12,7 +12,7 @@ function transformEncodingTask(db: Database) {
 	const createTableSql = `
 		CREATE TABLE IF NOT EXISTS encoding_task_new (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			createdAt REAL,
 			status INT DEFAULT 0
 		);
 		
@@ -41,7 +41,7 @@ function transformFrame(db: Database) {
 	const createTableSql = `
 		CREATE TABLE frame_new(
 			  id INTEGER PRIMARY KEY AUTOINCREMENT,
-			  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			  createdAt REAL,
 			  imgFilename TEXT,
 			  segmentID INTEGER NULL,
 			  videoPath TEXT NULL,

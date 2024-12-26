@@ -1,11 +1,107 @@
-# Database Schema Documentation
+# Database Schema Changelog
 
 This document outlines the changes made across different versions of 
 database structure used in the OpenRewind, including tables and fields.
 
-## Version 2 Schema Changes
+## Version 3 Schema Changes
 
-Cooresponding version: Since 0.4.0
+Corresponding version: Since 0.5.0
+
+### Update `encoding_task` Table
+
+#### Change `createAt` to `createdAt`
+
+The column `createAt` was renamed to `createdAt` for consistency.
+
+```sql
+ALTER TABLE encoding_task RENAME COLUMN createAt TO createdAt;
+```
+
+#### Convert `createdAt` to Unix Timestamp
+
+The `createdAt` column was updated to store Unix timestamps instead of formatted timestamps.
+
+```typescript
+const rows = db.prepare(`SELECT id, createdAt FROM encoding_task`).all() as { [x: string]: unknown; id: unknown; }[];
+const updateStmt = db.prepare(`UPDATE encoding_task SET createdAt_new = ? WHERE id = ?`);
+rows.forEach((row) => {
+    const unixTimestamp = convertTimestampToUnix(row.createdAt as string);
+    updateStmt.run(unixTimestamp, row.id);
+});
+```
+
+### Update `frame` Table
+
+#### Change `createAt` to `createdAt`
+
+The column `createAt` was renamed to `createdAt` for consistency.
+
+```sql
+ALTER TABLE frame RENAME COLUMN createAt TO createdAt;
+```
+
+#### Convert `createdAt` to Unix Timestamp
+
+The `createdAt` column was updated to store Unix timestamps instead of formatted timestamps.
+
+```typescript
+const rows = db.prepare(`SELECT id, createdAt FROM frame`).all() as { [x: string]: unknown; id: unknown; }[];
+const updateStmt = db.prepare(`UPDATE frame SET createdAt_new = ? WHERE id = ?`);
+rows.forEach((row) => {
+    const unixTimestamp = convertTimestampToUnix(row.createdAt as string);
+    updateStmt.run(unixTimestamp, row.id);
+});
+```
+
+### Update `segments` Table
+
+#### Rename Columns for Consistency
+
+The columns `startAt` and `endAt` were renamed to `startedAt` and `endedAt` respectively.
+
+```sql
+ALTER TABLE segments RENAME COLUMN startAt TO startedAt;
+ALTER TABLE segments RENAME COLUMN endAt TO endedAt;
+```
+
+#### Convert `startedAt` and `endedAt` to Unix Timestamps
+
+The `startedAt` and `endedAt` columns were updated to store Unix timestamps instead of formatted timestamps.
+
+```typescript
+const rows = db.prepare(`SELECT id, startedAt, endedAt FROM segments`).all() as { [x: string]: unknown; id: unknown; }[];
+const updateStart = db.prepare(`UPDATE segments SET startedAt_new = ? WHERE id = ?`);
+const updateEnd = db.prepare(`UPDATE segments SET endedAt_new = ? WHERE id = ?`);
+rows.forEach((row) => {
+    updateStart.run(convertTimestampToUnix(row.startedAt as string), row.id);
+    updateEnd.run(convertTimestampToUnix(row.endedAt as string), row.id);
+});
+```
+
+### Drop Deprecated `encoded` Column
+
+The deprecated `encoded` column was removed from the `frame` table.
+
+```sql
+ALTER TABLE frame DROP COLUMN encoded;
+```
+
+### Summary of Changes
+
+- **Update `encoding_task` Table:**
+  - Renamed `createAt` to `createdAt`.
+  - Converted `createdAt` to store Unix timestamps.
+- **Update `frame` Table:**
+  - Renamed `createAt` to `createdAt`.
+  - Converted `createdAt` to store Unix timestamps.
+  - Dropped the deprecated `encoded` column.
+- **Update `segments` Table:**
+  - Renamed `startAt` and `endAt` to `startedAt` and `endedAt` respectively.
+  - Converted `startedAt` and `endedAt` to store Unix timestamps.
+
+## Version 2 Schema
+
+Corresponding version: 0.4.0
 
 ### New Table: `config`
 
@@ -105,7 +201,7 @@ UPDATE frame SET encodeStatus = CASE WHEN encoded THEN 2 ELSE 0 END;
 
 ## Version 1 Schema
 
-Cooresponding version: 0.3.x
+Corresponding version: 0.3.x
 
 ### Table: `frame`
 

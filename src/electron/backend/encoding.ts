@@ -1,5 +1,5 @@
 import { Database } from "better-sqlite3";
-import { exec, spawnSync } from "child_process";
+import { exec } from "child_process";
 import fs from "fs";
 import path, { join } from "path";
 import type { EncodingTask, Frame } from "./schema";
@@ -7,10 +7,10 @@ import sizeOf from "image-size";
 import { getEncodingTempDir, getRecordingsDir, getScreenshotsDir } from "../utils/backend.js";
 import cache from "memory-cache";
 
-const ENCODING_INTERVAL = 10000; // 10 sec
-const CHECK_TASK_INTERVAL = 5000; // 5 sec
-const MIN_FRAMES_TO_ENCODE = 60; // At least 10 mins (0.5fps)
-const CONCURRENCY = 1; // Number of concurrent encoding tasks
+const FRAME_RATE = 0.5;
+const THREE_MINUTES = 180;
+const MIN_FRAMES_TO_ENCODE = THREE_MINUTES * FRAME_RATE;
+const CONCURRENCY = 1;
 
 // Detect and insert encoding tasks
 export function checkFramesForEncoding(db: Database) {
@@ -114,9 +114,9 @@ export function processEncodingTasks(db: Database) {
 		cache.put("tasksPerforming", [...tasksPerforming, taskId.toString()]);
 
 		const videoPath = path.join(getRecordingsDir(), `${taskId}.mp4`);
-		const ffmpegCommand = `ffmpeg -f concat -safe 0 -i "${metaFilePath}" -c:v libx264 -r 30 "${videoPath}"`;
+		const ffmpegCommand = `ffmpeg -f concat -safe 0 -i "${metaFilePath}" -c:v libx264 -r 30 -threads 1 "${videoPath}"`;
 		console.log("FFMPEG", ffmpegCommand);
-		exec(ffmpegCommand, (error, stdout, stderr) => {
+		exec(ffmpegCommand, (error, _stdout, _stderr) => {
 			if (error) {
 				console.error(`FFmpeg error: ${error.message}`);
 				// Roll back transaction
