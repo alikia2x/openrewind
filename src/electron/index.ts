@@ -9,6 +9,11 @@ import { startScreenshotLoop } from "./backend/screenshot.js";
 import { __dirname } from "./dirname.js";
 import { hideDock } from "./utils/electron.js";
 import { checkFramesForEncoding, deleteEncodedScreenshots, processEncodingTasks } from "./backend/encoding.js";
+import honoApp from "./server/index.js";
+import { serve } from "@hono/node-server";
+import { findAvailablePort } from "./utils/server.js";
+import cache from "memory-cache";
+import { generate } from '@alikia/random-key';
 
 const i18n = initI18n();
 
@@ -70,15 +75,26 @@ contextMenu({
 app.once("ready", () => {
 	hideDock();
 });
-app.on("activate", () => {});
+app.on("activate", () => {
+});
 
 app.on("ready", () => {
 	createTray();
+	findAvailablePort(12412).then((port) => {
+		generate().then((key) => {
+			cache.put("server:APIKey",key);
+			cache.put("server:port", port);
+			if (dev)
+				console.log(`API Key: ${key}`);
+			serve({ fetch: honoApp.fetch, port: port });
+			console.log(`App server running on port ${port}`);
+		});
+	})
 	initDatabase().then((db) => {
 		screenshotInterval = startScreenshotLoop(db);
 		setInterval(checkFramesForEncoding, 5000, db);
 		setInterval(processEncodingTasks, 10000, db);
-		setInterval(deleteEncodedScreenshots, 5000, db)
+		setInterval(deleteEncodedScreenshots, 5000, db);
 		dbConnection = db;
 	});
 	mainWindow = createMainWindow(port, () => (mainWindow = null));
@@ -89,7 +105,7 @@ app.on("ready", () => {
 	});
 });
 
-app.on("will-quit", ()=> {
+app.on("will-quit", () => {
 	dbConnection?.close();
 });
 
@@ -97,6 +113,6 @@ app.on("will-quit", ()=> {
 // 	if (process.platform !== "darwin") app.quit();
 // });
 
-ipcMain.on('close-settings', () => {
+ipcMain.on("close-settings", () => {
 	settingsWindow?.hide();
 });

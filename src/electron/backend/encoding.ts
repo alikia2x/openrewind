@@ -76,7 +76,7 @@ export async function deleteEncodedScreenshots(db: Database) {
 
 // Check and process encoding task
 export function processEncodingTasks(db: Database) {
-	const tasksPerforming = cache.get("tasksPerforming") as string[] || [];
+	const tasksPerforming = cache.get("backend:encodingTasksPerforming") as string[] || [];
 	if (tasksPerforming.length >= CONCURRENCY) return;
 
 	const stmt = db.prepare(`
@@ -111,7 +111,7 @@ export function processEncodingTasks(db: Database) {
 		const metaFilePath = path.join(getEncodingTempDir(), `${taskId}_meta.txt`);
 		const metaContent = frames.map(frame => `file '${path.join(getScreenshotsDir(), frame.imgFilename)}'\nduration 0.03333`).join("\n");
 		fs.writeFileSync(metaFilePath, metaContent);
-		cache.put("tasksPerforming", [...tasksPerforming, taskId.toString()]);
+		cache.put("backend:encodingTasksPerforming", [...tasksPerforming, taskId.toString()]);
 
 		const videoPath = path.join(getRecordingsDir(), `${taskId}.mp4`);
 		const ffmpegCommand = `ffmpeg -f concat -safe 0 -i "${metaFilePath}" -c:v libx264 -r 30 -threads 1 "${videoPath}"`;
@@ -138,7 +138,7 @@ export function processEncodingTasks(db: Database) {
 				db.prepare(`COMMIT;`).run();
 
 			}
-			cache.put("tasksPerforming", tasksPerforming.filter(id => id !== taskId.toString()));
+			cache.put("backend:encodingTasksPerforming", tasksPerforming.filter(id => id !== taskId.toString()));
 			fs.unlinkSync(metaFilePath);
 		});
 	}
