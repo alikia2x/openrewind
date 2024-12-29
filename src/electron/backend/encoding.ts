@@ -29,13 +29,23 @@ export function checkFramesForEncoding(db: Database) {
 
 	const buffer: Frame[] = [];
 
-	if (frames.length < MIN_FRAMES_TO_ENCODE) return;
-
 	for (let i = 1; i < frames.length; i++) {
 		const frame = frames[i];
 		const lastFrame = frames[i - 1];
-		const currentFrameSize = sizeOf(join(getScreenshotsDir(), frame.imgFilename));
-		const lastFrameSize = sizeOf(join(getScreenshotsDir(), lastFrame.imgFilename));
+		const framePath = join(getScreenshotsDir(), frame.imgFilename);
+		const lastFramePath = join(getScreenshotsDir(), lastFrame.imgFilename);
+		if (!fs.existsSync(framePath)) {
+			console.warn("File not exist:", frame.imgFilename);
+			deleteFrameFromDB(db, frame.id)
+			continue;
+		}
+		if (!fs.existsSync(lastFramePath)) {
+			console.warn("File not exist:", lastFrame.imgFilename);
+			deleteFrameFromDB(db, lastFrame.id)
+			continue;
+		}
+		const currentFrameSize = sizeOf(framePath);
+		const lastFrameSize = sizeOf(lastFramePath);
 		const twoFramesHaveSameSize =
 			currentFrameSize.width === lastFrameSize.width &&
 			currentFrameSize.height === lastFrameSize.height;
@@ -93,14 +103,23 @@ function deleteNonExistentScreenshots(db: Database) {
 
 	for (const filename of filesInDir) {
 		if (!dbFileSet.has(filename)) {
-			fs.unlinkSync(path.join(screenshotDir, filename));
+			//fs.unlinkSync(path.join(screenshotDir, filename));
+			console.log("[dry-run] delete:", filename);
 		}
 	}
 }
 
 export async function deleteUnnecessaryScreenshots(db: Database) {
 	deleteEncodedScreenshots(db);
-	deleteNonExistentScreenshots(db);
+	//deleteNonExistentScreenshots(db);
+}
+
+export function deleteFrameFromDB(db: Database, id: number) {
+	const deleteStmt = db.prepare(`
+		DELETE FROM frame WHERE id = ?;
+	`);
+	deleteStmt.run(id);
+	console.log(`Deleted frame ${id} from database`);
 }
 
 function getTasksPerforming() {
