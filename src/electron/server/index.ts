@@ -19,22 +19,42 @@ app.use(async (c, next) => {
 
 app.get("/ping", (c) => c.text("pong"));
 
-app.get("/timeline", async (c) => {
-	const { offset = 0, limit = 50 } = c.req.query();
-	const db = cache.get("server:dbConnection");
-
-	const frames = db
+function getLatestFrames(db: Database, limit = 50): Frame[] {
+	return db
 		.prepare(
 			`
     SELECT id, createdAt, imgFilename, videoPath, videoFrameIndex 
-    FROM frame 
+    FROM frame
     ORDER BY createdAt DESC
-    LIMIT ? OFFSET ?
+    LIMIT ?
   `
 		)
-		.all(limit, offset);
+		.all(limit) as Frame[];
+}
 
-	return c.json(frames);
+function getFramesUntilID(db: Database, untilID: number, limit = 50): Frame[] {
+	return db
+		.prepare(
+			`
+    SELECT id, createdAt, imgFilename, videoPath, videoFrameIndex 
+    FROM frame
+	WHERE id <= ?
+    ORDER BY createdAt DESC
+    LIMIT ?
+  `
+		)
+		.all(untilID, limit) as Frame[];
+}
+
+app.get("/timeline", async (c) => {
+	const query = c.req.query();
+	const limit = parseInt(query.limit) || undefined;
+	const db = cache.get("server:dbConnection");
+	if (query.untilID) {
+		return c.json(getFramesUntilID(db, parseInt(query.untilID), limit));
+	} else {
+		return c.json(getLatestFrames(db, limit));
+	}
 });
 
 app.get("/frame/:id", async (c) => {
