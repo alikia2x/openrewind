@@ -12,26 +12,23 @@ function migrateTo(version: number, db: Database) {
 	}
 }
 
+function getVersion(db: Database): number {
+	const stmt = db.prepare(`SELECT value FROM config WHERE key = 'version';`);
+	const data = stmt.get() as { value: string };
+	const version = data.value;
+	return parseInt(version);
+}
+
 export function migrate(db: Database) {
 	const configTableExists =
-		db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='config';`).get()
-		!== undefined;
+		db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='config';`).get() !==
+		undefined;
 	if (!configTableExists) {
 		migrateToV2(db);
 	}
-	let databaseVersion = parseInt(
-		(
-			db.prepare(`SELECT value FROM config WHERE key = 'version';`).get() as
-				{ value: any }
-		).value
-	);
+	let databaseVersion = getVersion(db);
 	while (databaseVersion < CURRENT_VERSION) {
 		migrateTo(databaseVersion, db);
-		databaseVersion = parseInt(
-			(
-				db.prepare(`SELECT value FROM config WHERE key = 'version';`).get() as
-					{ value: any }
-			).value
-		);
+		databaseVersion = getVersion(db);
 	}
 }

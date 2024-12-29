@@ -96,6 +96,7 @@ app.on("ready", () => {
 		setInterval(processEncodingTasks, 10000, db);
 		setInterval(deleteEncodedScreenshots, 5000, db);
 		dbConnection = db;
+		cache.put("server:dbConnection", dbConnection);
 	});
 	mainWindow = createMainWindow(port, () => (mainWindow = null));
 	settingsWindow = createSettingsWindow(port, () => (settingsWindow = null));
@@ -107,6 +108,8 @@ app.on("ready", () => {
 
 app.on("will-quit", () => {
 	dbConnection?.close();
+	if (screenshotInterval)
+		clearInterval(screenshotInterval);
 });
 
 // app.on("window-all-closed", () => {
