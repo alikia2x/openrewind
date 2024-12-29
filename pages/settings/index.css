@@ -1,19 +1,19 @@
 #root {
-    overflow: hidden;
-    user-select: none;
+	overflow: hidden;
+	user-select: none;
 }
 #settings-note a {
-    @apply text-blue-700 dark:text-[#66ccff]
+	@apply text-blue-700 dark:text-[#66ccff];
 }
 
 .text-weaken {
-    @apply text-gray-700 dark:text-gray-300;
+	@apply text-gray-700 dark:text-gray-300;
 }
 
 #settings-scroll-container::-webkit-scrollbar {
-    display: none;
+	display: none;
 }
 
 #settings-scroll-container {
-    scrollbar-width: none;
+	scrollbar-width: none;
 }

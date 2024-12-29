@@ -55,9 +55,9 @@ function initSchemaInV2(db: Database) {
 }
 
 /*
-* This function assumes that the database does not contain the "config" table,
-* and thus needs to be migrated to Version 2.
-* */
+ * This function assumes that the database does not contain the "config" table,
+ * and thus needs to be migrated to Version 2.
+ * */
 export function migrateToV2(db: Database) {
 	initSchemaInV2(db);
 
@@ -65,12 +65,11 @@ export function migrateToV2(db: Database) {
 	// Before: /Users/username/Library/Application Support/OpenRewind/Record Data/temp/screenshots/1733568609960.jpg
 	// After: 1733568609960.jpg
 	const rows = db.prepare("SELECT id, imgFilename FROM frame").all() as OldFrame[];
-	rows.forEach(row => {
+	rows.forEach((row) => {
 		const filename = row.imgFilename.match(/[^\\/]+$/)?.[0];
 
 		if (filename) {
-			db.prepare("UPDATE frame SET imgFilename = ? WHERE id = ?")
-				.run(filename, row.id);
+			db.prepare("UPDATE frame SET imgFilename = ? WHERE id = ?").run(filename, row.id);
 		}
 	});
 

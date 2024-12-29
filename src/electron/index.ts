@@ -1,4 +1,13 @@
-import { app, BrowserWindow, globalShortcut, ipcMain, Menu, nativeImage, screen, Tray } from "electron";
+import {
+	app,
+	BrowserWindow,
+	globalShortcut,
+	ipcMain,
+	Menu,
+	nativeImage,
+	screen,
+	Tray
+} from "electron";
 import contextMenu from "electron-context-menu";
 import { join } from "path";
 import initI18n from "./i18n.js";
@@ -8,12 +17,16 @@ import { Database } from "better-sqlite3";
 import { startScreenshotLoop } from "./backend/screenshot.js";
 import { __dirname } from "./dirname.js";
 import { hideDock } from "./utils/electron.js";
-import { checkFramesForEncoding, deleteUnnecessaryScreenshots, processEncodingTasks } from "./backend/encoding.js";
+import {
+	checkFramesForEncoding,
+	deleteUnnecessaryScreenshots,
+	processEncodingTasks
+} from "./backend/encoding.js";
 import honoApp from "./server/index.js";
 import { serve } from "@hono/node-server";
 import { findAvailablePort } from "./utils/server.js";
 import cache from "memory-cache";
-import { generate } from '@alikia/random-key';
+import { generate } from "@alikia/random-key";
 
 const i18n = initI18n();
 
@@ -75,21 +88,19 @@ contextMenu({
 app.once("ready", () => {
 	hideDock();
 });
-app.on("activate", () => {
-});
+app.on("activate", () => {});
 
 app.on("ready", () => {
 	createTray();
 	findAvailablePort(12412).then((port) => {
 		generate().then((key) => {
-			cache.put("server:APIKey",key);
+			cache.put("server:APIKey", key);
 			cache.put("server:port", port);
-			if (dev)
-				console.log(`API Key: ${key}`);
+			if (dev) console.log(`API Key: ${key}`);
 			serve({ fetch: honoApp.fetch, port: port });
 			console.log(`App server running on port ${port}`);
 		});
-	})
+	});
 	initDatabase().then((db) => {
 		screenshotInterval = startScreenshotLoop(db);
 		setInterval(checkFramesForEncoding, 5000, db);
@@ -108,8 +119,7 @@ app.on("ready", () => {
 
 app.on("will-quit", () => {
 	dbConnection?.close();
-	if (screenshotInterval)
-		clearInterval(screenshotInterval);
+	if (screenshotInterval) clearInterval(screenshotInterval);
 });
 
 // app.on("window-all-closed", () => {

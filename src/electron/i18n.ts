@@ -4,7 +4,6 @@ import fs from "fs";
 import { app } from "electron";
 import { __dirname } from "./dirname.js";
 
-
 /**
  * Selects the appropriate language based on system preferences and available languages
  *
@@ -21,7 +20,7 @@ export function detectLanguage(langs: string[], fallback: string): string {
 	const normalizedLang = systemLanguage.toLowerCase().split("-")[0];
 
 	// Find a matching language
-	const matchedLanguage = langs.find(lang => {
+	const matchedLanguage = langs.find((lang) => {
 		if (lang.indexOf(normalizedLang) !== -1) {
 			return lang;
 		}
@@ -53,4 +52,3 @@ export default function initI18n() {
 	});
 	return i18n;
 }
-

@@ -36,7 +36,7 @@ function TitleBar() {
 				<div
 					className="z-50 absolute right-2.5 top-2.5 bg-red-500 hover:bg-rose-400 h-3 w-3 rounded-full"
 					onClick={() => {
-						console.log(window.settingsWindow)
+						console.log(window.settingsWindow);
 						window.settingsWindow.close();
 					}}
 				>

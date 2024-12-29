@@ -1,8 +1,8 @@
 {
-  "settings": "Einstellungen",
-  "tray": {
-    "quit": "Aufhören",
-    "showMainWindow": "Suchen",
-    "showSettingsWindow": "Einstellungen"
-  }
+	"settings": "Einstellungen",
+	"tray": {
+		"quit": "Aufhören",
+		"showMainWindow": "Suchen",
+		"showSettingsWindow": "Einstellungen"
+	}
 }

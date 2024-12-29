@@ -1,7 +1,7 @@
 import screenshot from "screenshot-desktop";
 import { getScreenshotsDir } from "../utils/backend.js";
 import { join } from "path";
-import { Database }from "better-sqlite3";
+import { Database } from "better-sqlite3";
 import SqlString from "sqlstring";
 
 export function startScreenshotLoop(db: Database) {
@@ -10,15 +10,16 @@ export function startScreenshotLoop(db: Database) {
 		const screenshotDir = getScreenshotsDir();
 		const filename = `${timestamp}.png`;
 		const screenshotPath = join(screenshotDir, filename);
-		screenshot({filename: screenshotPath, format: "png"}).then((absolutePath) => {
-			const SQL = SqlString.format(
-				"INSERT INTO frame (imgFilename, createdAt) VALUES (?, ?)",
-				[filename, new Date().getTime() / 1000]
-			);
-			db.exec(SQL);
-		}).catch((err) => {
-			console.error(err);
-		});
+		screenshot({ filename: screenshotPath, format: "png" })
+			.then((absolutePath) => {
+				const SQL = SqlString.format(
+					"INSERT INTO frame (imgFilename, createdAt) VALUES (?, ?)",
+					[filename, new Date().getTime() / 1000]
+				);
+				db.exec(SQL);
+			})
+			.catch((err) => {
+				console.error(err);
+			});
 	}, 2000);
 }
-

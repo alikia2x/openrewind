@@ -19,10 +19,10 @@ export default defineConfig({
 			customChunk: (args) => {
 				// files into pages directory is export in single files
 				const { id } = args;
-				if (id.includes('node_modules')) {
-					return 'vendor';
+				if (id.includes("node_modules")) {
+					return "vendor";
 				} else {
-					return 'main';
+					return "main";
 				}
 			}
 		})

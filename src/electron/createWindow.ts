@@ -10,13 +10,14 @@ function loadURL(window: BrowserWindow, path = "", vitePort: string) {
 		window.loadURL(`http://localhost:${vitePort}/#${path}`).catch((e) => {
 			console.log("Error loading URL:", e);
 		});
-	}
-	else {
-		window.loadFile(join(__dirname, "../renderer/index.html"), {
-			hash: path,
-		}).catch((e) => {
-			console.log("Error loading URL:", e);
-		});
+	} else {
+		window
+			.loadFile(join(__dirname, "../renderer/index.html"), {
+				hash: path
+			})
+			.catch((e) => {
+				console.log("Error loading URL:", e);
+			});
 	}
 }
 
@@ -26,9 +27,9 @@ export function createSettingsWindow(vitePort: string, closeCallBack: Function) 
 		defaultHeight: 550
 	});
 	const enableFrame = process.platform === "darwin";
-	let icon
+	let icon;
 	switch (process.platform) {
-	    case "darwin":
+		case "darwin":
 			icon = undefined;
 			break;
 		case "win32":
@@ -46,13 +47,13 @@ export function createSettingsWindow(vitePort: string, closeCallBack: Function) 
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: true,
-			preload: join(__dirname, 'preload/settings.cjs')
+			preload: join(__dirname, "preload/settings.cjs")
 		},
 		titleBarStyle: "hiddenInset",
 		resizable: false,
 		show: false,
 		frame: enableFrame,
-		icon: icon,
+		icon: icon
 	});
 	windowState.manage(window);
 	window.on("show", () => {
@@ -92,7 +93,7 @@ export function createMainWindow(vitePort: string, closeCallBack: Function) {
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: true,
-			preload: join(__dirname, 'preload/rewind.cjs')
+			preload: join(__dirname, "preload/rewind.cjs")
 		},
 		roundedCorners: false,
 		transparent: true,

@@ -6,21 +6,23 @@ import { getDatabaseDir } from "../utils/backend.js";
 import { migrate } from "./migrate/index.js";
 
 function getLibSimpleExtensionPath() {
-    switch (process.platform) {
-        case "win32":
-            return path.join(__dirname, "bin", process.platform, "libsimple", "simple.dll");
-        case "darwin":
-            return path.join(__dirname, "bin", process.platform, "libsimple", "libsimple.dylib");
-        case "linux":
-            return path.join(__dirname, "bin", process.platform, "libsimple", "libsimple.so");
-        default:
-            throw new Error("Unsupported platform");
-    }
+	switch (process.platform) {
+		case "win32":
+			return path.join(__dirname, "bin", process.platform, "libsimple", "simple.dll");
+		case "darwin":
+			return path.join(__dirname, "bin", process.platform, "libsimple", "libsimple.dylib");
+		case "linux":
+			return path.join(__dirname, "bin", process.platform, "libsimple", "libsimple.so");
+		default:
+			throw new Error("Unsupported platform");
+	}
 }
 
 function databaseInitialized(db: Database) {
-	return db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='frame';`).get()
-		!== undefined;
+	return (
+		db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='frame';`).get() !==
+		undefined
+	);
 }
 
 function init(db: Database) {
@@ -147,8 +149,7 @@ export async function initDatabase() {
 
 	if (!databaseInitialized(db)) {
 		init(db);
-	}
-	else {
+	} else {
 		migrate(db);
 	}
 

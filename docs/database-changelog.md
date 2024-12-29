@@ -1,6 +1,6 @@
 # Database Schema Changelog
 
-This document outlines the changes made across different versions of 
+This document outlines the changes made across different versions of
 database structure used in the OpenRewind, including tables and fields.
 
 ## Version 3 Schema Changes
@@ -22,11 +22,14 @@ ALTER TABLE encoding_task RENAME COLUMN createAt TO createdAt;
 The `createdAt` column was updated to store Unix timestamps instead of formatted timestamps.
 
 ```typescript
-const rows = db.prepare(`SELECT id, createdAt FROM encoding_task`).all() as { [x: string]: unknown; id: unknown; }[];
+const rows = db.prepare(`SELECT id, createdAt FROM encoding_task`).all() as {
+	[x: string]: unknown;
+	id: unknown;
+}[];
 const updateStmt = db.prepare(`UPDATE encoding_task SET createdAt_new = ? WHERE id = ?`);
 rows.forEach((row) => {
-    const unixTimestamp = convertTimestampToUnix(row.createdAt as string);
-    updateStmt.run(unixTimestamp, row.id);
+	const unixTimestamp = convertTimestampToUnix(row.createdAt as string);
+	updateStmt.run(unixTimestamp, row.id);
 });
 ```
 
@@ -45,11 +48,14 @@ ALTER TABLE frame RENAME COLUMN createAt TO createdAt;
 The `createdAt` column was updated to store Unix timestamps instead of formatted timestamps.
 
 ```typescript
-const rows = db.prepare(`SELECT id, createdAt FROM frame`).all() as { [x: string]: unknown; id: unknown; }[];
+const rows = db.prepare(`SELECT id, createdAt FROM frame`).all() as {
+	[x: string]: unknown;
+	id: unknown;
+}[];
 const updateStmt = db.prepare(`UPDATE frame SET createdAt_new = ? WHERE id = ?`);
 rows.forEach((row) => {
-    const unixTimestamp = convertTimestampToUnix(row.createdAt as string);
-    updateStmt.run(unixTimestamp, row.id);
+	const unixTimestamp = convertTimestampToUnix(row.createdAt as string);
+	updateStmt.run(unixTimestamp, row.id);
 });
 ```
 
@@ -69,12 +75,15 @@ ALTER TABLE segments RENAME COLUMN endAt TO endedAt;
 The `startedAt` and `endedAt` columns were updated to store Unix timestamps instead of formatted timestamps.
 
 ```typescript
-const rows = db.prepare(`SELECT id, startedAt, endedAt FROM segments`).all() as { [x: string]: unknown; id: unknown; }[];
+const rows = db.prepare(`SELECT id, startedAt, endedAt FROM segments`).all() as {
+	[x: string]: unknown;
+	id: unknown;
+}[];
 const updateStart = db.prepare(`UPDATE segments SET startedAt_new = ? WHERE id = ?`);
 const updateEnd = db.prepare(`UPDATE segments SET endedAt_new = ? WHERE id = ?`);
 rows.forEach((row) => {
-    updateStart.run(convertTimestampToUnix(row.startedAt as string), row.id);
-    updateEnd.run(convertTimestampToUnix(row.endedAt as string), row.id);
+	updateStart.run(convertTimestampToUnix(row.startedAt as string), row.id);
+	updateEnd.run(convertTimestampToUnix(row.endedAt as string), row.id);
 });
 ```
 
@@ -89,15 +98,15 @@ ALTER TABLE frame DROP COLUMN encoded;
 ### Summary of Changes
 
 - **Update `encoding_task` Table:**
-  - Renamed `createAt` to `createdAt`.
-  - Converted `createdAt` to store Unix timestamps.
+    - Renamed `createAt` to `createdAt`.
+    - Converted `createdAt` to store Unix timestamps.
 - **Update `frame` Table:**
-  - Renamed `createAt` to `createdAt`.
-  - Converted `createdAt` to store Unix timestamps.
-  - Dropped the deprecated `encoded` column.
+    - Renamed `createAt` to `createdAt`.
+    - Converted `createdAt` to store Unix timestamps.
+    - Dropped the deprecated `encoded` column.
 - **Update `segments` Table:**
-  - Renamed `startAt` and `endAt` to `startedAt` and `endedAt` respectively.
-  - Converted `startedAt` and `endedAt` to store Unix timestamps.
+    - Renamed `startAt` and `endAt` to `startedAt` and `endedAt` respectively.
+    - Converted `startedAt` and `endedAt` to store Unix timestamps.
 
 ## Version 2 Schema
 
@@ -107,10 +116,10 @@ Corresponding version: 0.4.0
 
 Stores configuration data, including the database version.
 
-| Column Name | Data Type | Constraints/Default | Description                                                                 |
-|-------------|-----------|---------------------|-----------------------------------------------------------------------------|
-| `key`       | TEXT      | PRIMARY KEY         | Unique key for configuration settings.                                      |
-| `value`     | TEXT      |                     | Value associated with the key.                                              |
+| Column Name | Data Type | Constraints/Default | Description                            |
+| ----------- | --------- | ------------------- | -------------------------------------- |
+| `key`       | TEXT      | PRIMARY KEY         | Unique key for configuration settings. |
+| `value`     | TEXT      |                     | Value associated with the key.         |
 
 #### Insert Default Version
 
@@ -123,7 +132,7 @@ INSERT INTO config (key, value) VALUES ('version', '2');
 Stores encoding tasks that are queued for processing.
 
 | Column Name | Data Type | Constraints/Default        | Description                          |
-|-------------|-----------|----------------------------|--------------------------------------|
+| ----------- | --------- | -------------------------- | ------------------------------------ |
 | `id`        | INTEGER   | PRIMARY KEY, AUTOINCREMENT | Unique ID for the task.              |
 | `createAt`  | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP  | Timestamp when the task was created. |
 | `status`    | INTEGER   | DEFAULT 0                  | Indicates the status of the task.    |
@@ -132,8 +141,8 @@ Stores encoding tasks that are queued for processing.
 
 - `0`: Pending
 - `1`: In Progress
-- `2`: Completed 
-  - Once the task was set to this status, it will be imminently deleted by a trigger mentioned below.
+- `2`: Completed
+    - Once the task was set to this status, it will be imminently deleted by a trigger mentioned below.
 
 ### New Trigger: `delete_encoding_task`
 
@@ -158,10 +167,9 @@ END;
 Stores the frames that need to be encoded for the encoding task
 
 | Column Name      | Data Type | Constraints/Default                 | Description                                          |
-|------------------|-----------|-------------------------------------|------------------------------------------------------|
+| ---------------- | --------- | ----------------------------------- | ---------------------------------------------------- |
 | `frame`          | INTEGER   | PRIMARY KEY, FOREIGN KEY (frame.id) | ID for the frame associated with the encoding task.  |
 | `encodingTaskID` | TIMESTAMP | FOREIGN KEY (encoding_task.id)      | ID for the encoding task associated with this frame. |
-
 
 ### Update `frame` Table
 
@@ -170,12 +178,12 @@ Stores the frames that need to be encoded for the encoding task
 The `imgFilename` column was updated to store only the filename without the full path.
 
 ```typescript
-const rows = db.prepare('SELECT id, imgFilename FROM frame').all() as OldFrame[];
-rows.forEach(row => {
-    const filename = row.imgFilename.match(/[^\\/]+$/)?.[0];
-    if (filename) {
-        db.prepare('UPDATE frame SET imgFilename = ? WHERE id = ?').run(filename, row.id);
-    }
+const rows = db.prepare("SELECT id, imgFilename FROM frame").all() as OldFrame[];
+rows.forEach((row) => {
+	const filename = row.imgFilename.match(/[^\\/]+$/)?.[0];
+	if (filename) {
+		db.prepare("UPDATE frame SET imgFilename = ? WHERE id = ?").run(filename, row.id);
+	}
 });
 ```
 
@@ -192,12 +200,11 @@ UPDATE frame SET encodeStatus = CASE WHEN encoded THEN 2 ELSE 0 END;
 
 - **New Table:** `config` to store configuration data.
 - **Update `frame` Table:**
-  - Simplified `imgFilename` to store only the filename.
-  - Added `encodeStatus` column to replace the deprecated `encoded` column.
+    - Simplified `imgFilename` to store only the filename.
+    - Added `encodeStatus` column to replace the deprecated `encoded` column.
 - **Deprecated `encoded` column.**
-  - The `encoded` column is no longer used and is retained due to SQLite's inability to drop columns.
-    Creating a new table without this column and copying data to the new table could be time-consuming.
-
+    - The `encoded` column is no longer used and is retained due to SQLite's inability to drop columns.
+      Creating a new table without this column and copying data to the new table could be time-consuming.
 
 ## Version 1 Schema
 
@@ -208,7 +215,7 @@ Corresponding version: 0.3.x
 Stores information about individual frames.
 
 | Column Name       | Data Type | Constraints/Default             | Description                                                             |
-|-------------------|-----------|---------------------------------|-------------------------------------------------------------------------|
+| ----------------- | --------- | ------------------------------- | ----------------------------------------------------------------------- |
 | `id`              | INTEGER   | PRIMARY KEY, AUTOINCREMENT      | Unique identifier for each frame.                                       |
 | `createAt`        | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP       | Timestamp when the frame was created.                                   |
 | `imgFilename`     | TEXT      |                                 | Filename of the image associated with the frame.                        |
@@ -223,7 +230,7 @@ Stores information about individual frames.
 Stores recognition data associated with frames.
 
 | Column Name | Data Type | Constraints/Default        | Desc[database-structure.md](database-structure.md)ription |
-|-------------|-----------|----------------------------|-----------------------------------------------------------|
+| ----------- | --------- | -------------------------- | --------------------------------------------------------- |
 | `id`        | INTEGER   | PRIMARY KEY, AUTOINCREMENT | Unique identifier for each recognition data entry.        |
 | `frameID`   | INTEGER   | FOREIGN KEY (frame.id)     | ID of the frame to which the recognition data belongs.    |
 | `data`      | TEXT      |                            | Raw recognition data.                                     |
@@ -236,7 +243,7 @@ While capturing the screen, OpenRewind retrieves the currently active window.
 When it finds that the currently active window has changed to another application, a new segment will start.
 
 | Column Name   | Data Type | Constraints/Default        | Description                                          |
-|---------------|-----------|----------------------------|------------------------------------------------------|
+| ------------- | --------- | -------------------------- | ---------------------------------------------------- |
 | `id`          | INTEGER   | PRIMARY KEY, AUTOINCREMENT | Unique identifier for each segment.                  |
 | `startAt`     | TIMESTAMP |                            | Timestamp when the segment starts.                   |
 | `endAt`       | TIMESTAMP |                            | Timestamp when the segment ends.                     |
@@ -253,7 +260,7 @@ When it finds that the currently active window has changed to another applicatio
 Used for full-text search on recognition data.
 
 | Column Name | Data Type | Constraints/Default | Description                                            |
-|-------------|-----------|---------------------|--------------------------------------------------------|
+| ----------- | --------- | ------------------- | ------------------------------------------------------ |
 | `id`        | INTEGER   | UNINDEXED           | ID of the recognition data entry.                      |
 | `frameID`   | INTEGER   | UNINDEXED           | ID of the frame to which the recognition data belongs. |
 | `data`      | TEXT      |                     | Raw recognition data.                                  |

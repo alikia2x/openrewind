@@ -1,8 +1,8 @@
 {
-  "settings": "Impostazioni",
-  "tray": {
-    "quit": "Esentato",
-    "showMainWindow": "Ricerca",
-    "showSettingsWindow": "Impostazioni"
-  }
+	"settings": "Impostazioni",
+	"tray": {
+		"quit": "Esentato",
+		"showMainWindow": "Ricerca",
+		"showSettingsWindow": "Impostazioni"
+	}
 }

@@ -1,8 +1,8 @@
 {
-  "settings": "Ajustes",
-  "tray": {
-    "quit": "Abandonar",
-    "showMainWindow": "Buscar",
-    "showSettingsWindow": "Ajustes"
-  }
+	"settings": "Ajustes",
+	"tray": {
+		"quit": "Abandonar",
+		"showMainWindow": "Buscar",
+		"showSettingsWindow": "Ajustes"
+	}
 }

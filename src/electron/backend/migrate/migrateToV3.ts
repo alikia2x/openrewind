@@ -24,7 +24,10 @@ function transformEncodingTask(db: Database) {
 	`;
 	db.exec(createTableSql);
 
-	const rows = db.prepare(`SELECT id, createdAt FROM encoding_task`).all() as { [x: string]: unknown; id: unknown; }[];
+	const rows = db.prepare(`SELECT id, createdAt FROM encoding_task`).all() as {
+		[x: string]: unknown;
+		id: unknown;
+	}[];
 	const updateStmt = db.prepare(`UPDATE encoding_task SET createdAt_new = ? WHERE id = ?`);
 	rows.forEach((row) => {
 		const unixTimestamp = convertTimestampToUnix(row.createdAt as string);
@@ -55,10 +58,13 @@ function transformFrame(db: Database) {
 		DROP TABLE frame;
 		ALTER TABLE frame_new RENAME TO frame;
 		ALTER TABLE frame ADD COLUMN createdAt_new REAL;
-	`
+	`;
 	db.exec(createTableSql);
 
-	const rows = db.prepare(`SELECT id, createdAt FROM frame`).all() as { [x: string]: unknown; id: unknown; }[];
+	const rows = db.prepare(`SELECT id, createdAt FROM frame`).all() as {
+		[x: string]: unknown;
+		id: unknown;
+	}[];
 	const updateStmt = db.prepare(`UPDATE frame SET createdAt_new = ? WHERE id = ?`);
 	rows.forEach((row) => {
 		const unixTimestamp = convertTimestampToUnix(row.createdAt as string);
@@ -92,7 +98,10 @@ function transformSegments(db: Database) {
 		ALTER TABLE segments ADD COLUMN startedAt_new REAL;
 		ALTER TABLE segments ADD COLUMN endedAt_new REAL;		
 	`);
-	const rows = db.prepare(`SELECT id, startedAt, endedAt FROM segments`).all() as { [x: string]: unknown; id: unknown; }[];
+	const rows = db.prepare(`SELECT id, startedAt, endedAt FROM segments`).all() as {
+		[x: string]: unknown;
+		id: unknown;
+	}[];
 	const updateStart = db.prepare(`UPDATE segments SET startedAt_new = ? WHERE id = ?`);
 	const updateEnd = db.prepare(`UPDATE segments SET endedAt_new = ? WHERE id = ?`);
 	rows.forEach((row) => {
@@ -108,8 +117,17 @@ function transformSegments(db: Database) {
 	`);
 }
 
-function renameColumn(tableName: string, oldColumnName: string, newColumnName: string, db: Database) {
-	if (db.prepare(`SELECT 1 FROM pragma_table_info(?) WHERE name=?`).get([tableName, oldColumnName])) {
+function renameColumn(
+	tableName: string,
+	oldColumnName: string,
+	newColumnName: string,
+	db: Database
+) {
+	if (
+		db
+			.prepare(`SELECT 1 FROM pragma_table_info(?) WHERE name=?`)
+			.get([tableName, oldColumnName])
+	) {
 		db.exec(`ALTER TABLE ${tableName} RENAME COLUMN ${oldColumnName} TO ${newColumnName};`);
 	}
 }
@@ -173,10 +191,10 @@ export function migrateToV3(db: Database) {
 		PRAGMA foreign_keys = ON;
 	`);
 
-	renameColumn('encoding_task', 'createAt', 'createdAt', db);
-	renameColumn('frame', 'createAt', 'createdAt', db);
-	renameColumn('segments', 'startAt', 'startedAt', db);
-	renameColumn('segments', 'endAt', 'endedAt', db);
+	renameColumn("encoding_task", "createAt", "createdAt", db);
+	renameColumn("frame", "createAt", "createdAt", db);
+	renameColumn("segments", "startAt", "startedAt", db);
+	renameColumn("segments", "endAt", "endedAt", db);
 	if (db.prepare(`SELECT 1 FROM pragma_table_info('frame') WHERE name='encoded'`).get()) {
 		db.prepare(`ALTER TABLE frame DROP COLUMN encoded`).run();
 	}

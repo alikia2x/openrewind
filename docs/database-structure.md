@@ -6,10 +6,10 @@ This document outlines the current structure of the database schema used in the 
 
 Stores configuration data.
 
-| Column Name | Data Type | Constraints/Default | Description                                                                 |
-|-------------|-----------|---------------------|-----------------------------------------------------------------------------|
-| `key`       | TEXT      | PRIMARY KEY         | Unique key for configuration settings.                                      |
-| `value`     | TEXT      |                     | Value associated with the key.                                              |
+| Column Name | Data Type | Constraints/Default | Description                            |
+| ----------- | --------- | ------------------- | -------------------------------------- |
+| `key`       | TEXT      | PRIMARY KEY         | Unique key for configuration settings. |
+| `value`     | TEXT      |                     | Value associated with the key.         |
 
 ### Key: version
 
@@ -20,7 +20,7 @@ The current database schema version, represented as an integer. Since the `confi
 Stores information about individual frames.
 
 | Column Name       | Data Type | Constraints/Default             | Description                                               |
-|-------------------|-----------|---------------------------------|-----------------------------------------------------------|
+| ----------------- | --------- | ------------------------------- | --------------------------------------------------------- |
 | `id`              | INTEGER   | PRIMARY KEY, AUTOINCREMENT      | Unique identifier for each frame.                         |
 | `createdAt`       | REAL      |                                 | Timestamp when the frame was created.                     |
 | `imgFilename`     | TEXT      |                                 | Filename of the image associated with the frame.          |
@@ -40,19 +40,19 @@ Stores information about individual frames.
 
 Stores recognition data associated with frames.
 
-| Column Name | Data Type | Constraints/Default          | Description                                                                 |
-|-------------|-----------|------------------------------|-----------------------------------------------------------------------------|
-| `id`        | INTEGER   | PRIMARY KEY, AUTOINCREMENT   | Unique identifier for each recognition data entry.                          |
-| `frameID`   | INTEGER   | FOREIGN KEY (frame.id)       | ID of the frame to which the recognition data belongs.                      |
-| `data`      | TEXT      |                              | Raw recognition data.                                                       |
-| `text`      | TEXT      |                              | Recognized text.                                                            |
+| Column Name | Data Type | Constraints/Default        | Description                                            |
+| ----------- | --------- | -------------------------- | ------------------------------------------------------ |
+| `id`        | INTEGER   | PRIMARY KEY, AUTOINCREMENT | Unique identifier for each recognition data entry.     |
+| `frameID`   | INTEGER   | FOREIGN KEY (frame.id)     | ID of the frame to which the recognition data belongs. |
+| `data`      | TEXT      |                            | Raw recognition data.                                  |
+| `text`      | TEXT      |                            | Recognized text.                                       |
 
 ## Table: `segments`
 
 A segment is a period of time when a user uses a particular application. While capturing the screen, OpenRewind detects the currently active window. When it finds that the currently active window has changed to another application, a new segment will start.
 
 | Column Name   | Data Type | Constraints/Default        | Description                                          |
-|---------------|-----------|----------------------------|------------------------------------------------------|
+| ------------- | --------- | -------------------------- | ---------------------------------------------------- |
 | `id`          | INTEGER   | PRIMARY KEY, AUTOINCREMENT | Unique identifier for each segment.                  |
 | `startedAt`   | REAL      |                            | Timestamp when the segment starts.                   |
 | `endedAt`     | REAL      |                            | Timestamp when the segment ends.                     |
@@ -69,7 +69,7 @@ A segment is a period of time when a user uses a particular application. While c
 Stores encoding tasks that are queued for processing.
 
 | Column Name | Data Type | Constraints/Default        | Description                          |
-|-------------|-----------|----------------------------|--------------------------------------|
+| ----------- | --------- | -------------------------- | ------------------------------------ |
 | `id`        | INTEGER   | PRIMARY KEY, AUTOINCREMENT | Unique ID for the task.              |
 | `createdAt` | REAL      |                            | Timestamp when the task was created. |
 | `status`    | INTEGER   | DEFAULT 0                  | Indicates the status of the task.    |
@@ -79,14 +79,14 @@ Stores encoding tasks that are queued for processing.
 - `0`: Pending
 - `1`: In Progress
 - `2`: Completed
-  - Once the task was set to this status, it will be imminently deleted by a trigger mentioned below.
+    - Once the task was set to this status, it will be imminently deleted by a trigger mentioned below.
 
 ## Table: `encoding_task_data`
 
 Stores the frames that need to be encoded for the encoding task.
 
 | Column Name      | Data Type | Constraints/Default                 | Description                                          |
-|------------------|-----------|-------------------------------------|------------------------------------------------------|
+| ---------------- | --------- | ----------------------------------- | ---------------------------------------------------- |
 | `encodingTaskID` | INTEGER   | FOREIGN KEY (encoding_task.id)      | ID for the encoding task associated with this frame. |
 | `frame`          | INTEGER   | PRIMARY KEY, FOREIGN KEY (frame.id) | ID for the frame associated with the encoding task.  |
 
@@ -95,7 +95,7 @@ Stores the frames that need to be encoded for the encoding task.
 Used for full-text search on recognition data.
 
 | Column Name | Data Type | Constraints/Default | Description                                            |
-|-------------|-----------|---------------------|--------------------------------------------------------|
+| ----------- | --------- | ------------------- | ------------------------------------------------------ |
 | `id`        | INTEGER   | UNINDEXED           | ID of the recognition data entry.                      |
 | `frameID`   | INTEGER   | UNINDEXED           | ID of the frame to which the recognition data belongs. |
 | `data`      | TEXT      |                     | Raw recognition data.                                  |

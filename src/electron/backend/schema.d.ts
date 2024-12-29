@@ -9,7 +9,6 @@ export interface Frame {
 	encodeStatus: number;
 }
 
-
 export interface EncodingTask {
 	id: number;
 	createdAt: number;

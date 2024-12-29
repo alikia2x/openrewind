@@ -1,9 +1,15 @@
 import * as React from "react";
 import { useRef } from "react";
 
-const SettingsGroup = (
-	{ children, groupName, addGroupRef }:
-		{ children: React.ReactNode, groupName: string, addGroupRef: Function }) => {
+const SettingsGroup = ({
+	children,
+	groupName,
+	addGroupRef
+}: {
+	children: React.ReactNode;
+	groupName: string;
+	addGroupRef: Function;
+}) => {
 	const groupRef = useRef(null);
 
 	React.useEffect(() => {

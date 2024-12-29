@@ -1,10 +1,14 @@
 import { MouseEventHandler } from "react";
 import { Icon } from "@iconify-icon/react";
 
-const MenuItem = ({ icon, text, onClick }: {
-	icon: string,
-	text: string,
-	onClick: MouseEventHandler<HTMLDivElement>
+const MenuItem = ({
+	icon,
+	text,
+	onClick
+}: {
+	icon: string;
+	text: string;
+	onClick: MouseEventHandler<HTMLDivElement>;
 }) => {
 	return (
 		<div

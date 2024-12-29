@@ -1,4 +1,4 @@
-import { detect } from 'detect-port';
+import { detect } from "detect-port";
 
 /**
  * Finds an available port starting from a given port.
@@ -7,10 +7,10 @@ import { detect } from 'detect-port';
  */
 export async function findAvailablePort(startingFrom: number): Promise<number> {
 	return detect(startingFrom)
-		.then(realPort => {
+		.then((realPort) => {
 			return realPort; // Return the available port
 		})
-		.catch(err => {
+		.catch((err) => {
 			console.error(`Error detecting port: ${err.message}`);
 			throw err; // Rethrow the error for further handling if needed
 		});
