@@ -8,7 +8,7 @@ import { Database } from "better-sqlite3";
 import { startScreenshotLoop } from "./backend/screenshot.js";
 import { __dirname } from "./dirname.js";
 import { hideDock } from "./utils/electron.js";
-import { checkFramesForEncoding, deleteEncodedScreenshots, processEncodingTasks } from "./backend/encoding.js";
+import { checkFramesForEncoding, deleteUnnecessaryScreenshots, processEncodingTasks } from "./backend/encoding.js";
 import honoApp from "./server/index.js";
 import { serve } from "@hono/node-server";
 import { findAvailablePort } from "./utils/server.js";
@@ -94,7 +94,7 @@ app.on("ready", () => {
 		screenshotInterval = startScreenshotLoop(db);
 		setInterval(checkFramesForEncoding, 5000, db);
 		setInterval(processEncodingTasks, 10000, db);
-		setInterval(deleteEncodedScreenshots, 5000, db);
+		setInterval(deleteUnnecessaryScreenshots, 20000, db);
 		dbConnection = db;
 		cache.put("server:dbConnection", dbConnection);
 	});

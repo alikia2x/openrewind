@@ -4,7 +4,12 @@ import fs from "fs";
 import path, { join } from "path";
 import type { EncodingTask, Frame } from "./schema";
 import sizeOf from "image-size";
-import { getEncodingTempDir, getRecordingsDir, getScreenshotsDir } from "../utils/backend.js";
+import {
+	getEncodingTempDir,
+	getFFmpegCommand,
+	getRecordingsDir,
+	getScreenshotsDir
+} from "../utils/backend.js";
 import cache from "memory-cache";
 
 const FRAME_RATE = 0.5;
@@ -32,8 +37,8 @@ export function checkFramesForEncoding(db: Database) {
 		const currentFrameSize = sizeOf(join(getScreenshotsDir(), frame.imgFilename));
 		const lastFrameSize = sizeOf(join(getScreenshotsDir(), lastFrame.imgFilename));
 		const twoFramesHaveSameSize =
-			currentFrameSize.width === lastFrameSize.width
-			&& currentFrameSize.height === lastFrameSize.height;
+			currentFrameSize.width === lastFrameSize.width &&
+			currentFrameSize.height === lastFrameSize.height;
 		const bufferIsBigEnough = buffer.length >= MIN_FRAMES_TO_ENCODE;
 		const chunkConditionSatisfied = !twoFramesHaveSameSize || bufferIsBigEnough;
 		buffer.push(lastFrame);
@@ -50,9 +55,11 @@ export function checkFramesForEncoding(db: Database) {
 			`);
 			for (const frame of buffer) {
 				insertStmt.run(taskId, frame.id);
-				db.prepare(`
+				db.prepare(
+					`
 					UPDATE frame SET encodeStatus = 1 WHERE id = ?;
-				`).run(frame.id);
+				`
+				).run(frame.id);
 			}
 			console.log(`Created encoding task ${taskId} with ${buffer.length} frames`);
 			buffer.length = 0;
@@ -60,7 +67,7 @@ export function checkFramesForEncoding(db: Database) {
 	}
 }
 
-export async function deleteEncodedScreenshots(db: Database) {
+function deleteEncodedScreenshots(db: Database) {
 	const stmt = db.prepare(`
 	    SELECT * FROM frame WHERE encodeStatus = 2 AND imgFilename IS NOT NULL;
 	`);
@@ -74,9 +81,44 @@ export async function deleteEncodedScreenshots(db: Database) {
 	}
 }
 
+function deleteNonExistentScreenshots(db: Database) {
+	const screenshotDir = getScreenshotsDir();
+	const filesInDir = new Set(fs.readdirSync(screenshotDir));
+
+	const dbStmt = db.prepare(`
+	    SELECT imgFilename FROM frame WHERE imgFilename IS NOT NULL;
+	`);
+	const dbFiles = dbStmt.all() as { imgFilename: string }[];
+	const dbFileSet = new Set(dbFiles.map((f) => f.imgFilename));
+
+	for (const filename of filesInDir) {
+		if (!dbFileSet.has(filename)) {
+			fs.unlinkSync(path.join(screenshotDir, filename));
+		}
+	}
+}
+
+export async function deleteUnnecessaryScreenshots(db: Database) {
+	deleteEncodedScreenshots(db);
+	deleteNonExistentScreenshots(db);
+}
+
+function getTasksPerforming() {
+	return (cache.get("backend:encodingTasksPerforming") as string[]) || [];
+}
+
+function createMetaFile(frames: Frame[]) {
+	return frames
+		.map(
+			(frame) =>
+				`file '${path.join(getScreenshotsDir(), frame.imgFilename)}'\nduration 0.03333`
+		)
+		.join("\n");
+}
+
 // Check and process encoding task
 export function processEncodingTasks(db: Database) {
-	const tasksPerforming = cache.get("backend:encodingTasksPerforming") as string[] || [];
+	let tasksPerforming = getTasksPerforming();
 	if (tasksPerforming.length >= CONCURRENCY) return;
 
 	const stmt = db.prepare(`
@@ -109,12 +151,12 @@ export function processEncodingTasks(db: Database) {
 		const frames = framesStmt.all(taskId) as Frame[];
 
 		const metaFilePath = path.join(getEncodingTempDir(), `${taskId}_meta.txt`);
-		const metaContent = frames.map(frame => `file '${path.join(getScreenshotsDir(), frame.imgFilename)}'\nduration 0.03333`).join("\n");
+		const metaContent = createMetaFile(frames);
 		fs.writeFileSync(metaFilePath, metaContent);
 		cache.put("backend:encodingTasksPerforming", [...tasksPerforming, taskId.toString()]);
 
 		const videoPath = path.join(getRecordingsDir(), `${taskId}.mp4`);
-		const ffmpegCommand = `ffmpeg -f concat -safe 0 -i "${metaFilePath}" -c:v libx264 -r 30 -threads 1 "${videoPath}"`;
+		const ffmpegCommand = getFFmpegCommand(metaFilePath, videoPath);
 		console.log("FFMPEG", ffmpegCommand);
 		exec(ffmpegCommand, (error, _stdout, _stderr) => {
 			if (error) {
@@ -136,9 +178,12 @@ export function processEncodingTasks(db: Database) {
 					updateFrameStmt.run(`${taskId}.mp4`, frameIndex, frame.id);
 				}
 				db.prepare(`COMMIT;`).run();
-
 			}
-			cache.put("backend:encodingTasksPerforming", tasksPerforming.filter(id => id !== taskId.toString()));
+			tasksPerforming = getTasksPerforming();
+			cache.put(
+				"backend:encodingTasksPerforming",
+				tasksPerforming.filter((id) => id !== taskId.toString())
+			);
 			fs.unlinkSync(metaFilePath);
 		});
 	}
