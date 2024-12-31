@@ -26,7 +26,7 @@ import honoApp from "./server/index.js";
 import { serve } from "@hono/node-server";
 import { findAvailablePort } from "./utils/server.js";
 import cache from "memory-cache";
-import { generate } from "@alikia/random-key";
+import { generate as generateAPIKey } from "@alikia/random-key";
 
 const i18n = initI18n();
 
@@ -93,10 +93,11 @@ app.on("activate", () => {});
 app.on("ready", () => {
 	createTray();
 	findAvailablePort(12412).then((port) => {
-		generate().then((key) => {
-			cache.put("server:APIKey", key);
+		generateAPIKey().then((key) => {
 			cache.put("server:port", port);
-			if (dev) console.log(`API Key: ${key}`);
+			if (!dev) {
+				cache.put("server:APIKey", key);
+			}
 			serve({ fetch: honoApp.fetch, port: port });
 			console.log(`App server running on port ${port}`);
 		});
@@ -121,10 +122,6 @@ app.on("will-quit", () => {
 	dbConnection?.close();
 	if (screenshotInterval) clearInterval(screenshotInterval);
 });
-
-// app.on("window-all-closed", () => {
-// 	if (process.platform !== "darwin") app.quit();
-// });
 
 ipcMain.on("close-settings", () => {
 	settingsWindow?.hide();

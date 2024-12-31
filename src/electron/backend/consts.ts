@@ -1,0 +1,3 @@
+export const RECORD_FRAME_RATE = 0.5;
+export const ENCODING_FRAME_RATE = 30;
+export const ENCODING_FRAME_INTERVAL = 1 / ENCODING_FRAME_RATE;

@@ -6,13 +6,13 @@ import type { EncodingTask, Frame } from "./schema";
 import sizeOf from "image-size";
 import {
 	getEncodingTempDir,
-	getFFmpegCommand,
+	getEncodeCommand,
 	getRecordingsDir,
 	getScreenshotsDir
 } from "../utils/backend.js";
 import cache from "memory-cache";
+import { ENCODING_FRAME_INTERVAL, RECORD_FRAME_RATE as FRAME_RATE } from "./consts.js";
 
-const FRAME_RATE = 0.5;
 const THREE_MINUTES = 180;
 const MIN_FRAMES_TO_ENCODE = THREE_MINUTES * FRAME_RATE;
 const CONCURRENCY = 1;
@@ -22,7 +22,7 @@ export function checkFramesForEncoding(db: Database) {
 	const stmt = db.prepare(`
         SELECT id, imgFilename, createdAt
         FROM frame
-        WHERE encodeStatus = 0
+        WHERE encodeStatus = 0 AND imgFilename IS NOT NULL
         ORDER BY createdAt ASC;
     `);
 	const frames = stmt.all() as Frame[];
@@ -32,16 +32,16 @@ export function checkFramesForEncoding(db: Database) {
 	for (let i = 1; i < frames.length; i++) {
 		const frame = frames[i];
 		const lastFrame = frames[i - 1];
-		const framePath = join(getScreenshotsDir(), frame.imgFilename);
-		const lastFramePath = join(getScreenshotsDir(), lastFrame.imgFilename);
+		const framePath = join(getScreenshotsDir(), frame.imgFilename!);
+		const lastFramePath = join(getScreenshotsDir(), lastFrame.imgFilename!);
 		if (!fs.existsSync(framePath)) {
 			console.warn("File not exist:", frame.imgFilename);
-			deleteFrameFromDB(db, frame.id)
+			deleteFrameFromDB(db, frame.id);
 			continue;
 		}
 		if (!fs.existsSync(lastFramePath)) {
 			console.warn("File not exist:", lastFrame.imgFilename);
-			deleteFrameFromDB(db, lastFrame.id)
+			deleteFrameFromDB(db, lastFrame.id);
 			continue;
 		}
 		const currentFrameSize = sizeOf(framePath);
@@ -78,11 +78,13 @@ export function checkFramesForEncoding(db: Database) {
 }
 
 function deleteEncodedScreenshots(db: Database) {
+	// TODO: double-check that the frame was really encoded into the video
 	const stmt = db.prepare(`
 	    SELECT * FROM frame WHERE encodeStatus = 2 AND imgFilename IS NOT NULL;
 	`);
 	const frames = stmt.all() as Frame[];
 	for (const frame of frames) {
+		if (!frame.imgFilename) continue;
 		fs.unlinkSync(path.join(getScreenshotsDir(), frame.imgFilename));
 		const updateStmt = db.prepare(`
 			UPDATE frame SET imgFilename = NULL WHERE id = ?;
@@ -91,7 +93,7 @@ function deleteEncodedScreenshots(db: Database) {
 	}
 }
 
-function deleteNonExistentScreenshots(db: Database) {
+function _deleteNonExistentScreenshots(db: Database) {
 	const screenshotDir = getScreenshotsDir();
 	const filesInDir = new Set(fs.readdirSync(screenshotDir));
 
@@ -128,10 +130,12 @@ function getTasksPerforming() {
 
 function createMetaFile(frames: Frame[]) {
 	return frames
-		.map(
-			(frame) =>
-				`file '${path.join(getScreenshotsDir(), frame.imgFilename)}'\nduration 0.03333`
-		)
+		.map((frame) => {
+			if (!frame.imgFilename) return "";
+			const framePath = join(getScreenshotsDir(), frame.imgFilename);
+			const duration = ENCODING_FRAME_INTERVAL.toFixed(5);
+			return `file '${framePath}'\nduration ${duration}`;
+		})
 		.join("\n");
 }
 
@@ -175,7 +179,7 @@ export function processEncodingTasks(db: Database) {
 		cache.put("backend:encodingTasksPerforming", [...tasksPerforming, taskId.toString()]);
 
 		const videoPath = path.join(getRecordingsDir(), `${taskId}.mp4`);
-		const ffmpegCommand = getFFmpegCommand(metaFilePath, videoPath);
+		const ffmpegCommand = getEncodeCommand(metaFilePath, videoPath);
 		console.log("FFMPEG", ffmpegCommand);
 		exec(ffmpegCommand, (error, _stdout, _stderr) => {
 			if (error) {

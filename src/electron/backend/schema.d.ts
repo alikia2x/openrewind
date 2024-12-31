@@ -1,7 +1,7 @@
 export interface Frame {
 	id: number;
 	createdAt: number;
-	imgFilename: string;
+	imgFilename: string | null;
 	segmentID: number | null;
 	videoPath: string | null;
 	videoFrameIndex: number | null;
