@@ -2,7 +2,7 @@ import { app, BrowserWindow, screen } from "electron";
 import { join } from "path";
 import { __dirname } from "./dirname.js";
 import windowStateManager from "electron-window-state";
-import { hideDock, showDock } from "./utils/electron.js";
+import { hideDock, showDock } from "./utils/platform/index.js";
 
 function loadURL(window: BrowserWindow, path = "", vitePort: string) {
 	const dev = !app.isPackaged;
@@ -21,7 +21,7 @@ function loadURL(window: BrowserWindow, path = "", vitePort: string) {
 	}
 }
 
-export function createSettingsWindow(vitePort: string, closeCallBack: Function) {
+export function createSettingsWindow(vitePort: string, closeCallBack: () => void) {
 	const windowState = windowStateManager({
 		defaultWidth: 650,
 		defaultHeight: 550
@@ -63,6 +63,7 @@ export function createSettingsWindow(vitePort: string, closeCallBack: Function) 
 		window.hide();
 		windowState.saveState(window);
 		e.preventDefault();
+		closeCallBack();
 	});
 	window.once("close", () => {
 		window.hide();
@@ -72,7 +73,7 @@ export function createSettingsWindow(vitePort: string, closeCallBack: Function) 
 	return window;
 }
 
-export function createMainWindow(vitePort: string, closeCallBack: Function) {
+export function createMainWindow(vitePort: string, closeCallBack: () => void) {
 	const display = screen.getPrimaryDisplay();
 	const { width, height } = display.bounds;
 	const windowState = windowStateManager({
@@ -104,6 +105,7 @@ export function createMainWindow(vitePort: string, closeCallBack: Function) {
 
 	window.on("close", () => {
 		windowState.saveState(window);
+		closeCallBack();
 	});
 	window.once("close", () => {
 		closeCallBack();

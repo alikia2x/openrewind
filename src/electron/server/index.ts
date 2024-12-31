@@ -5,13 +5,12 @@ import fs from "fs";
 import { Database } from "better-sqlite3";
 import type { Frame } from "../backend/schema";
 import {
-	extractFramesFromVideo,
 	getDecodingTempDir,
 	getRecordingsDir,
 	getScreenshotsDir,
-	immediatelyExtractFrameFromVideo,
 	waitForFileExists
-} from "../utils/backend.js";
+} from "../utils/fs/index.js";
+import { immediatelyExtractFrameFromVideo } from "../utils/video/index.js";
 import { existsSync } from "fs";
 
 const app = new Hono();
@@ -80,30 +79,23 @@ app.get("/frame/:id", async (c) => {
 		.get(id) as Frame | undefined;
 
 	if (!frame) return c.json({ error: "Frame not found" }, 404);
-	
+
 	const decodingTempDir = getDecodingTempDir();
 	const screenshotsDir = getScreenshotsDir();
 	const videoFilename = frame.videoPath;
 	const frameIndex = frame.videoFrameIndex;
 	const imageFilename = frame.imgFilename;
 	const bareVideoFilename = videoFilename?.replace(".mp4", "") || null;
-	const decodedImageBMP = frameIndex
-		? `${bareVideoFilename}_${(frameIndex).toString().padStart(4, "0")}.bmp`
-		: null;
-	const decodedImagePNG = frameIndex
-		? `${bareVideoFilename}_${(frameIndex).toString().padStart(4, "0")}.png`
+	const decodedImage = frameIndex
+		? `${bareVideoFilename}_${frameIndex.toString().padStart(4, "0")}.bmp`
 		: null;
 	let returnImagePath = "";
 
 	let needToBeDecoded = videoFilename !== null && frameIndex !== null && !frame.imgFilename;
-	if (decodedImagePNG && fs.existsSync(join(getDecodingTempDir(), decodedImagePNG))) {
+	if (decodedImage && fs.existsSync(join(getDecodingTempDir(), decodedImage))) {
 		needToBeDecoded = false;
-		returnImagePath = join(decodingTempDir, decodedImagePNG);
-	} else if (decodedImageBMP && fs.existsSync(join(getDecodingTempDir(), decodedImageBMP))) {
-		needToBeDecoded = false;
-		returnImagePath = join(decodingTempDir, decodedImageBMP);
-	}
-	else if (imageFilename && fs.existsSync(join(screenshotsDir, imageFilename))) {
+		returnImagePath = join(decodingTempDir, decodedImage);
+	} else if (imageFilename && fs.existsSync(join(screenshotsDir, imageFilename))) {
 		returnImagePath = join(screenshotsDir, imageFilename);
 	}
 
@@ -113,15 +105,15 @@ app.get("/frame/:id", async (c) => {
 		if (!videoExists) {
 			return c.json({ error: "Video not found" }, { status: 404 });
 		}
-		
-		// Decode requesting frame immediately, then decode the whole video chunk
-		// This allows the user to get an immediate response,
-		// and we get prepared for the next few seconds of scrolling (timeline).
-		const decodedFilename = immediatelyExtractFrameFromVideo(videoFilename!, frameIndex!, decodingTempDir);
+
+		const decodedFilename = immediatelyExtractFrameFromVideo(
+			videoFilename!,
+			frameIndex!,
+			decodingTempDir
+		);
 		const decodedPath = join(decodingTempDir, decodedFilename);
 
 		await waitForFileExists(decodedPath);
-		extractFramesFromVideo(videoFilename!, null, null, decodingTempDir);
 
 		if (existsSync(decodedPath)) {
 			const imageBuffer = fs.readFileSync(decodedPath);
@@ -136,10 +128,11 @@ app.get("/frame/:id", async (c) => {
 		}
 	} else {
 		const imageBuffer = fs.readFileSync(returnImagePath);
+		const imageMimeType = imageFilename?.endsWith(".png") ? "image/png" : "image/jpeg";
 		return new Response(imageBuffer, {
 			status: 200,
 			headers: {
-				"Content-Type": "image/png"
+				"Content-Type": imageMimeType
 			}
 		});
 	}

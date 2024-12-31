@@ -1,5 +1,5 @@
 import screenshot from "screenshot-desktop";
-import { getScreenshotsDir } from "../utils/backend.js";
+import { getScreenshotsDir } from "../utils/fs/index.js";
 import { join } from "path";
 import { Database } from "better-sqlite3";
 import SqlString from "sqlstring";
@@ -11,7 +11,7 @@ export function startScreenshotLoop(db: Database) {
 		const filename = `${timestamp}.png`;
 		const screenshotPath = join(screenshotDir, filename);
 		screenshot({ filename: screenshotPath, format: "png" })
-			.then((absolutePath) => {
+			.then(() => {
 				const SQL = SqlString.format(
 					"INSERT INTO frame (imgFilename, createdAt) VALUES (?, ?)",
 					[filename, new Date().getTime() / 1000]
