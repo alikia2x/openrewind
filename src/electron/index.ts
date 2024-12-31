@@ -99,6 +99,12 @@ app.on("ready", () => {
 				cache.put("server:APIKey", key);
 			}
 			serve({ fetch: honoApp.fetch, port: port });
+
+			// Send API info to renderer
+			settingsWindow?.webContents.send("api-info", {
+				port,
+				apiKey: key
+			});
 			console.log(`App server running on port ${port}`);
 		});
 	});
@@ -125,4 +131,11 @@ app.on("will-quit", () => {
 
 ipcMain.on("close-settings", () => {
 	settingsWindow?.hide();
+});
+
+ipcMain.handle("request-api-info", () => {
+  return {
+    port: cache.get("server:port"),
+    apiKey: cache.get("server:APIKey")
+  };
 });

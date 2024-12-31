@@ -36,7 +36,7 @@ export function immediatelyExtractFrameFromVideo(
 	const outputFilename = `${bareVideoFilename}_${frameIndex.toString().padStart(4, "0")}.bmp`;
 	const outputPathArg = join(outputPath, outputFilename);
 	const args = [
-        "-ss",
+		"-ss",
 		`${formatTime(frameIndex / ENCODING_FRAME_RATE)}`,
 		"-i",
 		`${fullVideoPath}`,

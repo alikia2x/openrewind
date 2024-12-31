@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import cache from "memory-cache";
 import { join } from "path";
 import fs from "fs";
@@ -14,6 +15,8 @@ import { immediatelyExtractFrameFromVideo } from "../utils/video/index.js";
 import { existsSync } from "fs";
 
 const app = new Hono();
+
+app.use("*", cors());
 
 app.use(async (c, next) => {
 	const key = cache.get("server:APIKey");
@@ -45,7 +48,7 @@ function getFramesUntilID(db: Database, untilID: number, limit = 50): Frame[] {
 			`
     SELECT id, createdAt, imgFilename, videoPath, videoFrameIndex 
     FROM frame
-	WHERE id <= ?
+	WHERE id < ?
     ORDER BY createdAt DESC
     LIMIT ?
   `

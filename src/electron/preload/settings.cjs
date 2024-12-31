@@ -17,3 +17,7 @@ contextBridge.exposeInMainWorld("settingsWindow", {
 		ipcRenderer.send("close-settings", {});
 	}
 });
+
+contextBridge.exposeInMainWorld("appGlobal", {
+	requestApiInfo: () => ipcRenderer.invoke("request-api-info")
+});
