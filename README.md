@@ -20,7 +20,7 @@ Latest results: There is an Alpha version available! We currently only support A
 
 ## To-dos
 
-## OCR optimized for the specific platform
+### OCR optimized for the specific platform
 
 We will use the OCR API provided by the OS for macOS and Windows.
 
@@ -29,7 +29,7 @@ Reference projects:
     > We [forked](https://github.com/alikia2x/ocrit) this project to suit our needs
 - [Windows.Media.Ocr.Cli](https://github.com/zh-h/Windows.Media.Ocr.Cli)
 
-## Big-little architecture optimizations for Apple Silicon
+### Big-little architecture optimizations for Apple Silicon
 
 We wrote a small Swift program that allows a given program to run at a selected QoS energy class. On ARM Macs, this means we can offload some work (such as video encoding) to energy-efficient cores, reducing peak CPU usage and power consumption.
 
