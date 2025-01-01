@@ -41,6 +41,7 @@
     "image-size": "^1.1.1",
     "jotai": "^2.11.0",
     "memory-cache": "^0.2.0",
+    "pino": "^9.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^15.1.2",

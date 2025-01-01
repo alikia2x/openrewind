@@ -1,5 +1,5 @@
 import screenshot from "screenshot-desktop";
-import { getScreenshotsDir } from "../utils/fs/index.js";
+import { getScreenshotsDir } from "../utils/index.js";
 import { join } from "path";
 import { Database } from "better-sqlite3";
 import SqlString from "sqlstring";

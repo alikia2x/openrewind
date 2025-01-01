@@ -59,6 +59,15 @@ export function getDecodingTempDir() {
 	return decodingTempDir;
 }
 
+export function getLogDir() {
+	const dataDir = createDataDir();
+	const logDir = path.join(dataDir, "logs");
+	if (!fs.existsSync(logDir)) {
+		fs.mkdirSync(logDir, { recursive: true });
+	}
+	return logDir;
+}
+
 export async function waitForFileExists(filePath: string, timeout: number = 10000): Promise<void> {
 	return new Promise((resolve, reject) => {
 		fs.access(filePath, fs.constants.F_OK, (err) => {

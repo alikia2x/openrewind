@@ -16,7 +16,7 @@ import { initDatabase } from "./backend/init.js";
 import { Database } from "better-sqlite3";
 import { startScreenshotLoop } from "./backend/screenshot.js";
 import { __dirname } from "./dirname.js";
-import { hideDock } from "./utils/platform/index.js";
+import { hideDock } from "./utils/index.js";
 import {
 	checkFramesForEncoding,
 	deleteUnnecessaryScreenshots,
@@ -24,7 +24,7 @@ import {
 } from "./backend/encoding.js";
 import honoApp from "./server/index.js";
 import { serve } from "@hono/node-server";
-import { findAvailablePort } from "./utils/network/index.js";
+import { findAvailablePort } from "./utils/index.js";
 import cache from "memory-cache";
 import { generate as generateAPIKey } from "@alikia/random-key";
 

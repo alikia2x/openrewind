@@ -10,8 +10,8 @@ import {
 	getRecordingsDir,
 	getScreenshotsDir,
 	waitForFileExists
-} from "../utils/fs/index.js";
-import { immediatelyExtractFrameFromVideo } from "../utils/video/index.js";
+} from "../utils/index.js";
+import { immediatelyExtractFrameFromVideo } from "../utils/index.js";
 import { existsSync } from "fs";
 
 const app = new Hono();

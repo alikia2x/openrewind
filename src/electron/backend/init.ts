@@ -2,7 +2,7 @@ import * as path from "path";
 import { Database } from "better-sqlite3";
 import DB from "better-sqlite3";
 import { __dirname } from "../dirname.js";
-import { getDatabaseDir } from "../utils/fs/index.js";
+import { getDatabaseDir } from "../utils/index.js";
 import { migrate } from "./migrate/index.js";
 
 function getLibSimpleExtensionPath() {

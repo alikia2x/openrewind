@@ -44,7 +44,7 @@ export function immediatelyExtractFrameFromVideo(
 		"1",
 		`${outputPathArg}`
 	];
-	const ffmpeg = spawn("ffmpeg", args);
+	const ffmpeg = spawn(getFFmpegPath(), args);
 	ffmpeg.stdout.on("data", (data) => {
 		console.log(data.toString());
 	});

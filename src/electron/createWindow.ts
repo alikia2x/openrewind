@@ -2,7 +2,7 @@ import { app, BrowserWindow, screen } from "electron";
 import { join } from "path";
 import { __dirname } from "./dirname.js";
 import windowStateManager from "electron-window-state";
-import { hideDock, showDock } from "./utils/platform/index.js";
+import { hideDock, showDock } from "./utils/index.js";
 
 function loadURL(window: BrowserWindow, path = "", vitePort: string) {
 	const dev = !app.isPackaged;

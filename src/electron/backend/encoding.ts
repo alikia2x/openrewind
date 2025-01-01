@@ -4,8 +4,8 @@ import fs from "fs";
 import path, { join } from "path";
 import type { EncodingTask, Frame } from "./schema";
 import sizeOf from "image-size";
-import { getEncodeCommand } from "../utils/video/index.js";
-import { getRecordingsDir, getEncodingTempDir, getScreenshotsDir } from "../utils/fs/index.js";
+import { getEncodeCommand } from "../utils/index.js";
+import { getRecordingsDir, getEncodingTempDir, getScreenshotsDir } from "../utils/index.js";
 import cache from "memory-cache";
 import { ENCODING_FRAME_INTERVAL, RECORD_FRAME_RATE as FRAME_RATE } from "./consts.js";
 
