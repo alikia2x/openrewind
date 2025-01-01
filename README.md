@@ -2,12 +2,12 @@
 
 OpenRewind is an open-source alternative to [rewind.ai](https://rewind.ai), forked from [OpenRecall](https://github.com/openrecall/openrecall).
 
-We wanted to create an open source app that provides similar core functionality
+We want to create an open source app that provides similar core functionality
 to rewind.ai, and that app is **OpenRewind**.
 
 ## Alpha Release: 0.8.0
 
-Latest results: There is an Alpha version available! We currently only support Apple Silicon Macs.
+Latest works: There is an Alpha version available! We currently only support Apple Silicon Macs.
 (Of course, thanks to building on Electron, there will definitely be support for multiple platforms in the beta/stable release)
 
 ### ✨ Features
@@ -31,7 +31,7 @@ Reference projects:
 
 ### Big-little architecture optimizations for Apple Silicon
 
-We wrote a small Swift program that allows a given program to run at a selected QoS energy class. On ARM Macs, this means we can offload some work (such as video encoding) to energy-efficient cores, reducing peak CPU usage and power consumption.
+We wrote a small Swift program that allows a given program to run at a selected QoS class. On ARM Mac, this means we can put some work (such as video encoding) to Efficient cores, reducing peak CPU usage and power consumption.
 
 > See: [Prioritize Work with Quality of Service Classes](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/EnergyGuide-iOS/PrioritizeWorkWithQoS.html)
 
