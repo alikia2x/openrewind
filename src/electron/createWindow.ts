@@ -98,8 +98,12 @@ export function createMainWindow(vitePort: string, closeCallBack: () => void) {
 		},
 		roundedCorners: false,
 		transparent: true,
-		show: false
+		show: false,
+		title: "OpenRewind Rewind Page"
 	});
+
+	// Exclude the window from the recording
+	window.setContentProtection(true);
 
 	windowState.manage(window);
 
