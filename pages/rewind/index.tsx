@@ -39,6 +39,7 @@ function Image({ src }: { src: string }) {
 	);
 }
 
+// TODO: Memory optimization
 export default function RewindPage() {
 	const { port, apiKey } = useAtomValue(apiInfoAtom);
 	const [timeline, setTimeline] = useState<Frame[]>([]);
@@ -168,9 +169,9 @@ export default function RewindPage() {
 	const handleScroll = (e: React.WheelEvent) => {
 		if (!containerRef.current || !currentFrameId) return;
 
-		// Only allow scroll changes every 80ms
+		// Only allow scroll changes every 30ms
 		const now = Date.now();
-		if (now - lastScrollTime.current < 80) return;
+		if (now - lastScrollTime.current < 30) return;
 		lastScrollTime.current = now;
 
 		const delta = Math.sign(e.deltaY);
@@ -234,30 +235,6 @@ export default function RewindPage() {
 							timeline.find((frame) => frame.id === currentFrameId)!.createdAt
 					  ) || "Loading..."
 					: "Loading..."}
-			</div>
-
-			{/* Timeline */}
-			<div
-				className="absolute top-8 right-8 h-5/6 overflow-hidden bg-zinc-800 bg-opacity-80 backdrop-blur-lg
-					 px-4 py-2 text-xl"
-			>
-				{timeline
-					.filter((frame) => frame.id <= currentFrameId!)
-					.map((frame) => (
-						<div
-							key={frame.id}
-							className="flex items-center gap-2"
-							onClick={() => {
-								setCurrentFrameId(frame.id);
-								loadImage(frame.id);
-							}}
-						>
-							<span className="mt-2 text-base text-zinc-400">#{frame.id}</span>
-							<span className="text-white">
-								{dayjs().diff(dayjs.unix(frame.createdAt), "second")} sec ago
-							</span>
-						</div>
-					))}
 			</div>
 		</div>
 	);
