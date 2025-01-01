@@ -120,6 +120,9 @@ app.get("/frame/:id", async (c) => {
 
 		if (existsSync(decodedPath)) {
 			const imageBuffer = fs.readFileSync(decodedPath);
+			setTimeout(() => {
+				fs.unlinkSync(decodedPath);
+			}, 1000);
 			return new Response(imageBuffer, {
 				status: 200,
 				headers: {

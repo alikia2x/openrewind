@@ -45,15 +45,84 @@ export default function RewindPage() {
 	const [currentFrameId, setCurrentFrameId] = useState<number | null>(null);
 	const [images, setImages] = useState<Record<number, string>>({});
 	const [isLoadingMore, setIsLoadingMore] = useState(false);
-	const lastRequestTime = useRef(Date.now());
 	const containerRef = useRef<HTMLDivElement>(null);
 	const lastAvaliableFrameId = useRef<number | null>(null);
+	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const updatedTimes = useRef<number>(0);
 
-	useEffect(() => {
-		if (currentFrameId && images[currentFrameId]) {
-			lastAvaliableFrameId.current = currentFrameId;
+	const loadingQueue = useRef<number[]>([]);
+	const isProcessingQueue = useRef(false);
+
+	const processQueue = useCallback(async () => {
+		if (!port || isProcessingQueue.current || loadingQueue.current.length === 0) return;
+
+		isProcessingQueue.current = true;
+		const frameId = loadingQueue.current.shift()!;
+
+		try {
+			const startUpdateTimes = updatedTimes.current;
+			const response = await fetch(`http://localhost:${port}/frame/${frameId}`, {
+				headers: {
+					"x-api-key": apiKey
+				}
+			});
+			const blob = await response.blob();
+			const url = URL.createObjectURL(blob);
+			setImages((prev) => {
+				const newImages = { ...prev, [frameId]: url };
+				if (updatedTimes.current <= startUpdateTimes) {
+					lastAvaliableFrameId.current = frameId;
+					updatedTimes.current++;
+				}
+				return newImages;
+			});
+		} catch (error) {
+			console.error(error);
+		} finally {
+			isProcessingQueue.current = false;
+			setTimeout(() => {
+				processQueue();
+			}, 500);
 		}
-	}, [images, currentFrameId]);
+	}, [apiKey, port]);
+
+	const loadImage = useCallback(
+		(frameId: number) => {
+			if (!port || images[frameId]) return;
+
+			// Add to queue if not already in it
+			if (!loadingQueue.current.includes(frameId)) {
+				loadingQueue.current.push(frameId);
+				// preserve up to 5 tasks in the queue
+				loadingQueue.current = loadingQueue.current.slice(-5);
+			}
+
+			// Start processing if not already running
+			if (!isProcessingQueue.current) {
+				processQueue();
+			}
+		},
+		[images, port, processQueue]
+	);
+
+	// Load current frame after 400ms of inactivity
+	useEffect(() => {
+		if (timeoutRef.current) {
+			clearTimeout(timeoutRef.current);
+		}
+
+		if (currentFrameId) {
+			timeoutRef.current = setTimeout(() => {
+				loadImage(currentFrameId);
+			}, 400);
+		}
+
+		return () => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
+		};
+	}, [currentFrameId, loadImage]);
 
 	// Fetch timeline data
 	const fetchTimeline = useCallback(
@@ -83,29 +152,6 @@ export default function RewindPage() {
 		fetchTimeline();
 	}, [fetchTimeline]);
 
-	const loadImage = useCallback(
-		(frameId: number) => {
-			if (!port) return;
-			// Rate limit to at most 1 request every 200ms
-			const now = Date.now();
-			if (images[frameId]) return;
-
-			lastRequestTime.current = now;
-			fetch(`http://localhost:${port}/frame/${frameId}`, {
-				headers: {
-					"x-api-key": apiKey
-				}
-			})
-				.then((res) => res.blob())
-				.then((blob) => {
-					const url = URL.createObjectURL(blob);
-					setImages((prev) => ({ ...prev, [frameId]: url }));
-				})
-				.catch(console.error);
-		},
-		[apiKey, images, port]
-	);
-
 	// Load initial images
 	useEffect(() => {
 		if (timeline.length > 0 && !currentFrameId) {
@@ -133,6 +179,8 @@ export default function RewindPage() {
 
 		const newIndex = Math.min(Math.max(currentIndex - delta, 0), timeline.length - 1);
 		const newFrameId = timeline[newIndex].id;
+
+		console.log(currentFrameId, lastAvaliableFrameId);
 
 		if (newFrameId !== currentFrameId) {
 			setCurrentFrameId(newFrameId);
@@ -178,7 +226,7 @@ export default function RewindPage() {
 
 			{/* Time capsule */}
 			<div
-				className="absolute bottom-8 left-8 bg-zinc-800 bg-opacity-80 backdrop-blur-lg
+				className="absolute bottom-8 left-8 bg-zinc-800 text-white bg-opacity-80 backdrop-blur-lg
 					 rounded-full px-4 py-2 text-xl"
 			>
 				{currentFrameId
@@ -205,7 +253,7 @@ export default function RewindPage() {
 							}}
 						>
 							<span className="mt-2 text-base text-zinc-400">#{frame.id}</span>
-							<span>
+							<span className="text-white">
 								{dayjs().diff(dayjs.unix(frame.createdAt), "second")} sec ago
 							</span>
 						</div>
