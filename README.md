@@ -5,34 +5,35 @@ OpenRewind is an open-source alternative to [rewind.ai](https://rewind.ai), fork
 We wanted to create an open source app that provides similar core functionality
 to rewind.ai, and that app is **OpenRewind**.
 
+## Alpha Release: 0.8.0
+
+Latest results: There is an Alpha version available! We currently only support Apple Silicon Macs.
+(Of course, thanks to building on Electron, there will definitely be support for multiple platforms in the beta/stable release)
+
+### ✨ Features
+
+- GUI app. No terminal windows, no need to install any dependencies
+- Take a screenshot of your screen every 2 seconds
+- Encode screenshots to video at regular intervals
+- A full screen "rewind" page similar to Rewind, with scrolling to view captured screenshots
+- Screenshots can be taken excluding the "rewind" window
+
 ## To-dos
 
-### Update the OCR Engine
+## OCR optimized for the specific platform
 
-OpenRecall currently uses docTR as its OCR engine, but it performs inadequately.
-On my MacBook Air M2 (2022), processing a screenshot takes around 20 seconds, with CPU usage peaking at over 400%.
-During this time, screenshots cannot be captured, and the engine appears to recognize only Latin characters.
+We will use the OCR API provided by the OS for macOS and Windows.
 
-To address this, we plan to replace the OCR with a more efficient alternative that supports multiple writing systems.
-We are working on [RapidOCR ONNX](https://github.com/alikia2x/RapidOCR-ONNX), a fork of a project which has same name,
-developed by RapidAI.
-RapidOCR ONNX uses [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) as its model architecture, and
-runs on the [ONNX Runtime](https://github.com/microsoft/onnxruntime/).
+Reference projects:  
+- [ocrit](https://github.com/insidegui/ocrit/)
+    > We [forked](https://github.com/alikia2x/ocrit) this project to suit our needs
+- [Windows.Media.Ocr.Cli](https://github.com/zh-h/Windows.Media.Ocr.Cli)
 
-### Implement a Task Queue/Scheduler
+## Big-little architecture optimizations for Apple Silicon
 
-Currently, OpenRecall's OCR recognition and database operations are synchronous (blocking).
-This results in increased screenshot frequency, as described in the previous section.
+We wrote a small Swift program that allows a given program to run at a selected QoS energy class. On ARM Macs, this means we can offload some work (such as video encoding) to energy-efficient cores, reducing peak CPU usage and power consumption.
 
-Our next goal is to introduce a task queue to handle high-load tasks (such as OCR, indexing, and archiving) asynchronously. This will ensure that time-sensitive tasks (like capturing screenshots) are prioritized.
-
-### Improve the Frontend
-
-The current frontend of OpenRecall is quite basic. Given my expertise in web development,
-I will build a more elegant frontend from scratch.
-
-We are now switched to Electron in order to deliver a native experience,
-aiming to match the functionality of [rewind.ai](https://rewind.ai).
+> See: [Prioritize Work with Quality of Service Classes](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/EnergyGuide-iOS/PrioritizeWorkWithQoS.html)
 
 ### Add More Features
 
