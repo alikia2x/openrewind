@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { getUserDataDir } from "../platform/index.js";
+import { __dirname } from "../../dirname.js";
 
 export function createDataDir() {
 	const dataDir = getUserDataDir();
@@ -66,6 +67,10 @@ export function getLogDir() {
 		fs.mkdirSync(logDir, { recursive: true });
 	}
 	return logDir;
+}
+
+export function getBinDir() {
+	return path.join(__dirname, "bin");
 }
 
 export async function waitForFileExists(filePath: string, timeout: number = 10000): Promise<void> {

@@ -1,6 +1,5 @@
 import gulp from "gulp";
 import ts from "gulp-typescript";
-// @ts-ignore
 import clean from "gulp-clean";
 import fs from "fs";
 
@@ -30,7 +29,7 @@ gulp.task("assets", () => {
 });
 
 gulp.task("binary", () => {
-	return gulp.src("bin/**/*", { encoding: false }).pipe(gulp.dest("dist/electron/bin"));
+	return gulp.src(`bin/${process.platform}-${process.arch}/**/*`, { encoding: false }).pipe(gulp.dest("dist/electron/bin"));
 });
 
 gulp.task("locales", () => {

@@ -2,17 +2,17 @@ import * as path from "path";
 import { Database } from "better-sqlite3";
 import DB from "better-sqlite3";
 import { __dirname } from "../dirname.js";
-import { getDatabaseDir } from "../utils/index.js";
+import { getBinDir, getDatabaseDir } from "../utils/index.js";
 import { migrate } from "./migrate/index.js";
 
 function getLibSimpleExtensionPath() {
 	switch (process.platform) {
 		case "win32":
-			return path.join(__dirname, "bin", process.platform, "libsimple", "simple.dll");
+			return path.join(getBinDir(), "libsimple", "simple.dll");
 		case "darwin":
-			return path.join(__dirname, "bin", process.platform, "libsimple", "libsimple.dylib");
+			return path.join(getBinDir(), "libsimple", "libsimple.dylib");
 		case "linux":
-			return path.join(__dirname, "bin", process.platform, "libsimple", "libsimple.so");
+			return path.join(getBinDir(), "libsimple", "libsimple.so");
 		default:
 			throw new Error("Unsupported platform");
 	}

@@ -1,8 +1,7 @@
 import { join } from "path";
 import os from "os";
 import { app } from "electron";
-import { __dirname } from "../../dirname.js";
-import { logger } from "../index.js";
+import { getBinDir, logger } from "../index.js";
 
 export function getUserDataDir() {
 	switch (process.platform) {
@@ -41,17 +40,21 @@ export function getFFmpegPath() {
 	let path = "";
 	switch (process.platform) {
 		case "win32":
-			path = join(__dirname, "bin", process.platform, "ffmpeg.exe");
+			path = join(getBinDir(), "ffmpeg.exe");
 			break;
 		case "darwin":
-			path = join(__dirname, "bin", process.platform, "ffmpeg");
+			path = join(getBinDir(), "ffmpeg");
 			break;
 		case "linux":
-			path = join(__dirname, "bin", process.platform, "ffmpeg");
+			path = join(getBinDir(), "ffmpeg");
 			break;
 		default:
 			throw new Error("Unsupported platform");
 	}
 	logger.info("FFmpeg path: %s", path);
 	return path;
+}
+
+export function getOCRitPath() {
+	const path = join(getBinDir(), "ocrit");
 }
