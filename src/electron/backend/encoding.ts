@@ -1,4 +1,3 @@
-import { Database } from "better-sqlite3";
 import { exec } from "child_process";
 import fs from "fs";
 import path, { join } from "path";
@@ -8,13 +7,15 @@ import { getEncodeCommand } from "../utils/index.js";
 import { getRecordingsDir, getEncodingTempDir, getScreenshotsDir } from "../utils/index.js";
 import cache from "memory-cache";
 import { ENCODING_FRAME_INTERVAL, RECORD_FRAME_RATE as FRAME_RATE } from "./consts.js";
+import { getDatabase } from "../utils/index.js";
 
 const THREE_MINUTES = 180;
 const MIN_FRAMES_TO_ENCODE = THREE_MINUTES * FRAME_RATE;
 const CONCURRENCY = 1;
 
 // Detect and insert encoding tasks
-export function checkFramesForEncoding(db: Database) {
+export function checkFramesForEncoding() {
+	const db = getDatabase();
 	const stmt = db.prepare(`
         SELECT id, imgFilename, createdAt
         FROM frame
@@ -32,12 +33,12 @@ export function checkFramesForEncoding(db: Database) {
 		const lastFramePath = join(getScreenshotsDir(), lastFrame.imgFilename!);
 		if (!fs.existsSync(framePath)) {
 			console.warn("File not exist:", frame.imgFilename);
-			deleteFrameFromDB(db, frame.id);
+			deleteFrameFromDB(frame.id);
 			continue;
 		}
 		if (!fs.existsSync(lastFramePath)) {
 			console.warn("File not exist:", lastFrame.imgFilename);
-			deleteFrameFromDB(db, lastFrame.id);
+			deleteFrameFromDB(lastFrame.id);
 			continue;
 		}
 		const currentFrameSize = sizeOf(framePath);
@@ -73,7 +74,8 @@ export function checkFramesForEncoding(db: Database) {
 	}
 }
 
-function deleteEncodedScreenshots(db: Database) {
+function deleteEncodedScreenshots() {
+	const db = getDatabase();
 	// TODO: double-check that the frame was really encoded into the video
 	const stmt = db.prepare(`
 	    SELECT * FROM frame WHERE encodeStatus = 2 AND imgFilename IS NOT NULL;
@@ -89,7 +91,8 @@ function deleteEncodedScreenshots(db: Database) {
 	}
 }
 
-function _deleteNonExistentScreenshots(db: Database) {
+function _deleteNonExistentScreenshots() {
+	const db = getDatabase();
 	const screenshotDir = getScreenshotsDir();
 	const filesInDir = new Set(fs.readdirSync(screenshotDir));
 
@@ -107,12 +110,13 @@ function _deleteNonExistentScreenshots(db: Database) {
 	}
 }
 
-export async function deleteUnnecessaryScreenshots(db: Database) {
-	deleteEncodedScreenshots(db);
-	//deleteNonExistentScreenshots(db);
+export async function deleteUnnecessaryScreenshots() {
+	deleteEncodedScreenshots();
+	//deleteNonExistentScreenshots();
 }
 
-export function deleteFrameFromDB(db: Database, id: number) {
+export function deleteFrameFromDB(id: number) {
+	const db = getDatabase();
 	const deleteStmt = db.prepare(`
 		DELETE FROM frame WHERE id = ?;
 	`);
@@ -136,7 +140,8 @@ function createMetaFile(frames: Frame[]) {
 }
 
 // Check and process encoding task
-export function processEncodingTasks(db: Database) {
+export function processEncodingTasks() {
+	const db = getDatabase();
 	let tasksPerforming = getTasksPerforming();
 	if (tasksPerforming.length >= CONCURRENCY) return;
 

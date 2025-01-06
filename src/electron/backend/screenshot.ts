@@ -1,25 +1,23 @@
 import screenshot from "screenshot-desktop";
-import { getScreenshotsDir } from "../utils/index.js";
+import { getDatabase, getScreenshotsDir } from "../utils/index.js";
 import { join } from "path";
-import { Database } from "better-sqlite3";
 import SqlString from "sqlstring";
 
-export function startScreenshotLoop(db: Database) {
-	return setInterval(() => {
-		const timestamp = new Date().getTime();
-		const screenshotDir = getScreenshotsDir();
-		const filename = `${timestamp}.png`;
-		const screenshotPath = join(screenshotDir, filename);
-		screenshot({ filename: screenshotPath, format: "png" })
-			.then(() => {
-				const SQL = SqlString.format(
-					"INSERT INTO frame (imgFilename, createdAt) VALUES (?, ?)",
-					[filename, new Date().getTime() / 1000]
-				);
-				db.exec(SQL);
-			})
-			.catch((err) => {
-				console.error(err);
-			});
-	}, 2000);
+export function takeScreenshot() {
+	const db = getDatabase();
+	const timestamp = new Date().getTime();
+	const screenshotDir = getScreenshotsDir();
+	const filename = `${timestamp}.png`;
+	const screenshotPath = join(screenshotDir, filename);
+	screenshot({ filename: screenshotPath, format: "png" })
+		.then(() => {
+			const SQL = SqlString.format(
+				"INSERT INTO frame (imgFilename, createdAt) VALUES (?, ?)",
+				[filename, new Date().getTime() / 1000]
+			);
+			db.exec(SQL);
+		})
+		.catch((err) => {
+			console.error(err);
+		});
 }

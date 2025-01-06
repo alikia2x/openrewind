@@ -14,7 +14,7 @@ import initI18n from "./i18n.js";
 import { createMainWindow, createSettingsWindow } from "./createWindow.js";
 import { initDatabase } from "./backend/init.js";
 import { Database } from "better-sqlite3";
-import { startScreenshotLoop } from "./backend/screenshot.js";
+import { takeScreenshot } from "./backend/screenshot.js";
 import { __dirname } from "./dirname.js";
 import { hideDock } from "./utils/index.js";
 import {
@@ -27,16 +27,17 @@ import { serve } from "@hono/node-server";
 import { findAvailablePort } from "./utils/index.js";
 import cache from "memory-cache";
 import { generate as generateAPIKey } from "@alikia/random-key";
+import { Scheduler } from "./backend/scheduler.js";
 
 const i18n = initI18n();
 
 const t = i18n.t.bind(i18n);
 const port = process.env.PORT || "5173";
 const dev = !app.isPackaged;
+const scheduler = new Scheduler();
 
 let tray: null | Tray = null;
 let dbConnection: null | Database = null;
-let screenshotInterval: null | NodeJS.Timeout = null;
 
 let mainWindow: BrowserWindow | null;
 let settingsWindow: BrowserWindow | null;
@@ -109,10 +110,10 @@ app.on("ready", () => {
 		});
 	});
 	initDatabase().then((db) => {
-		screenshotInterval = startScreenshotLoop(db);
-		setInterval(checkFramesForEncoding, 5000, db);
-		setInterval(processEncodingTasks, 10000, db);
-		setInterval(deleteUnnecessaryScreenshots, 20000, db);
+		scheduler.addTask("screenshot", takeScreenshot, 2000, 2000);
+		scheduler.addTask("check-encoding", checkFramesForEncoding, 5000, 10000);
+		scheduler.addTask("process-encoding", processEncodingTasks, 10000, 30000);
+		scheduler.addTask("delete-screenshots", deleteUnnecessaryScreenshots, 20000, 60000);
 		dbConnection = db;
 		cache.put("server:dbConnection", dbConnection);
 	});
@@ -126,7 +127,7 @@ app.on("ready", () => {
 
 app.on("will-quit", () => {
 	dbConnection?.close();
-	if (screenshotInterval) clearInterval(screenshotInterval);
+	scheduler.stop();
 });
 
 ipcMain.on("close-settings", () => {
@@ -134,8 +135,8 @@ ipcMain.on("close-settings", () => {
 });
 
 ipcMain.handle("request-api-info", () => {
-  return {
-    port: cache.get("server:port"),
-    apiKey: cache.get("server:APIKey")
-  };
+	return {
+		port: cache.get("server:port"),
+		apiKey: cache.get("server:APIKey")
+	};
 });
