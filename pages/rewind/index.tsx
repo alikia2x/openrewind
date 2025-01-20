@@ -34,7 +34,7 @@ function Image({ src }: { src: string }) {
 		<img
 			src={src}
 			alt="Current frame"
-			className="w-full h-full object-cover absolute inset-0"
+			className="w-full h-full object-contain absolute inset-0"
 		/>
 	);
 }
@@ -181,8 +181,6 @@ export default function RewindPage() {
 		const newIndex = Math.min(Math.max(currentIndex - delta, 0), timeline.length - 1);
 		const newFrameId = timeline[newIndex].id;
 
-		console.log(currentFrameId, lastAvaliableFrameId);
-
 		if (newFrameId !== currentFrameId) {
 			setCurrentFrameId(newFrameId);
 			// Preload adjacent images
@@ -212,9 +210,19 @@ export default function RewindPage() {
 	return (
 		<div
 			ref={containerRef}
-			className="w-screen h-screen relative dark:text-white overflow-hidden"
+			className="w-screen h-screen relative dark:text-white overflow-hidden bg-black"
 			onWheel={handleScroll}
 		>
+			<img
+				src={currentFrameId
+					? images[currentFrameId] ||
+					  (lastAvaliableFrameId.current ? images[lastAvaliableFrameId.current] : "")
+					: ""}
+				alt="background"
+				className="w-full h-full object-cover absolute inset-0 blur-lg"
+			/>
+
+			
 			{/* Current image */}
 			<Image
 				src={
@@ -224,6 +232,8 @@ export default function RewindPage() {
 						: ""
 				}
 			/>
+
+			
 
 			{/* Time capsule */}
 			<div
