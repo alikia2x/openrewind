@@ -83,7 +83,9 @@ function deleteEncodedScreenshots() {
 	const frames = stmt.all() as Frame[];
 	for (const frame of frames) {
 		if (!frame.imgFilename) continue;
-		fs.unlinkSync(path.join(getScreenshotsDir(), frame.imgFilename));
+		const imgPath = path.join(getScreenshotsDir(), frame.imgFilename);
+		if (!fs.existsSync(imgPath)) return;
+		fs.unlinkSync(imgPath);
 		const updateStmt = db.prepare(`
 			UPDATE frame SET imgFilename = NULL WHERE id = ?;
 		`);

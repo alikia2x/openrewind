@@ -5,7 +5,6 @@ interface Task {
 	id: TaskId;
 	func: TaskFunction;
 	interval?: number;
-	maxInterval?: number;
 	lastRun?: number;
 	nextRun?: number;
 	isPaused: boolean;
@@ -21,8 +20,6 @@ export interface TaskStatus {
 export class Scheduler {
 	private tasks: Map<TaskId, Task> = new Map();
 	private timer: NodeJS.Timeout | null = null;
-	private nextTickTime: number | null = null;
-
 	constructor(private readonly minTickInterval: number = 500) {
 		this.start();
 	}
@@ -76,16 +73,6 @@ export class Scheduler {
 			task.nextRun = now + task.interval!;
 		}
 
-		const isTaskReadyForMaxIntervalRun =
-			task.maxInterval && task.lastRun && now - task.lastRun >= task.maxInterval;
-		if (isTaskReadyForMaxIntervalRun) {
-			task.func();
-			task.lastRun = now;
-			if (task.interval) {
-				task.nextRun = now + task.interval;
-			}
-		}
-
 		const isTaskNextRunEarlierThanNextTick = task.nextRun && task.nextRun < getNextTick();
 		if (isTaskNextRunEarlierThanNextTick) {
 			updateNextTick(task.nextRun!);
@@ -113,15 +100,12 @@ export class Scheduler {
 	 * @param id A unique string identifier for the task.
 	 * @param func The function to be executed by the task.
 	 * @param interval The interval (in milliseconds) between task executions.
-	 * @param maxInterval The maximum time (in milliseconds) that a task can wait before being executed.
-	 * If a task has not been executed in this amount of time, it will be executed immediately.
 	 */
-	addTask(id: TaskId, func: TaskFunction, interval?: number, maxInterval?: number): void {
+	addTask(id: TaskId, func: TaskFunction, interval?: number): void {
 		this.tasks.set(id, {
 			id,
 			func,
 			interval,
-			maxInterval,
 			isPaused: false,
 			lastRun: undefined,
 			nextRun: interval ? Date.now() + interval : undefined
@@ -165,7 +149,7 @@ export class Scheduler {
 	}
 
 	/**
-	 * Resume a paused task, so that it can be executed according to its interval and maxInterval.
+	 * Resume a paused task, so that it can be executed according to its interval.
 	 *
 	 * @param id The unique string identifier for the task.
 	 */

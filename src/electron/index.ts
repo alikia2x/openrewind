@@ -110,10 +110,10 @@ app.on("ready", () => {
 		});
 	});
 	initDatabase().then((db) => {
-		scheduler.addTask("screenshot", takeScreenshot, 2000, 2000);
-		scheduler.addTask("check-encoding", checkFramesForEncoding, 5000, 10000);
-		scheduler.addTask("process-encoding", processEncodingTasks, 10000, 30000);
-		scheduler.addTask("delete-screenshots", deleteUnnecessaryScreenshots, 20000, 60000);
+		scheduler.addTask("screenshot", takeScreenshot, 2000);
+		scheduler.addTask("check-encoding", checkFramesForEncoding, 5000);
+		scheduler.addTask("process-encoding", processEncodingTasks, 10000);
+		scheduler.addTask("delete-screenshots", deleteUnnecessaryScreenshots, 20000);
 		dbConnection = db;
 		cache.put("server:dbConnection", dbConnection);
 	});
