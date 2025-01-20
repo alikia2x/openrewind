@@ -142,7 +142,7 @@ function init(db: Database) {
 
 export async function initDatabase() {
 	const dbPath = getDatabaseDir();
-	const db = new DB(dbPath, { verbose: console.log });
+	const db = new DB(dbPath);
 	const libSimpleExtensionPath = getLibSimpleExtensionPath();
 
 	db.loadExtension(libSimpleExtensionPath);

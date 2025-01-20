@@ -19,9 +19,10 @@ export function checkFramesForEncoding() {
 	const stmt = db.prepare(`
         SELECT id, imgFilename, createdAt
         FROM frame
-        WHERE encodeStatus = 0 AND imgFilename IS NOT NULL
-        ORDER BY createdAt ASC;
-    `);
+        WHERE encodeStatus = 0
+          AND imgFilename IS NOT NULL
+        ORDER BY createdAt;
+	`);
 	const frames = stmt.all() as Frame[];
 
 	const buffer: Frame[] = [];
@@ -52,20 +53,24 @@ export function checkFramesForEncoding() {
 		if (chunkConditionSatisfied) {
 			// Create new encoding task
 			const taskStmt = db.prepare(`
-				INSERT INTO encoding_task (status) VALUES (0);
+				INSERT INTO encoding_task (status)
+				VALUES (0);
 			`);
 			const taskId = taskStmt.run().lastInsertRowid;
 
 			// Insert frames into encoding_task_data
 			const insertStmt = db.prepare(`
-				INSERT INTO encoding_task_data (encodingTaskID, frame) VALUES (?, ?);
+				INSERT INTO encoding_task_data (encodingTaskID, frame)
+				VALUES (?, ?);
 			`);
 			for (const frame of buffer) {
 				insertStmt.run(taskId, frame.id);
 				db.prepare(
 					`
-					UPDATE frame SET encodeStatus = 1 WHERE id = ?;
-				`
+						UPDATE frame
+						SET encodeStatus = 1
+						WHERE id = ?;
+					`
 				).run(frame.id);
 			}
 			console.log(`Created encoding task ${taskId} with ${buffer.length} frames`);
@@ -78,16 +83,21 @@ function deleteEncodedScreenshots() {
 	const db = getDatabase();
 	// TODO: double-check that the frame was really encoded into the video
 	const stmt = db.prepare(`
-	    SELECT * FROM frame WHERE encodeStatus = 2 AND imgFilename IS NOT NULL;
+		SELECT *
+		FROM frame
+		WHERE encodeStatus = 2
+		  AND imgFilename IS NOT NULL;
 	`);
 	const frames = stmt.all() as Frame[];
 	for (const frame of frames) {
-		if (!frame.imgFilename) continue;
-		const imgPath = path.join(getScreenshotsDir(), frame.imgFilename);
-		if (!fs.existsSync(imgPath)) return;
-		fs.unlinkSync(imgPath);
+		const imgPath = path.join(getScreenshotsDir(), frame.imgFilename!);
+		if (fs.existsSync(imgPath)) {
+			fs.unlinkSync(imgPath);
+		}
 		const updateStmt = db.prepare(`
-			UPDATE frame SET imgFilename = NULL WHERE id = ?;
+			UPDATE frame
+			SET imgFilename = NULL
+			WHERE id = ?;
 		`);
 		updateStmt.run(frame.id);
 	}
@@ -99,7 +109,9 @@ function _deleteNonExistentScreenshots() {
 	const filesInDir = new Set(fs.readdirSync(screenshotDir));
 
 	const dbStmt = db.prepare(`
-	    SELECT imgFilename FROM frame WHERE imgFilename IS NOT NULL;
+		SELECT imgFilename
+		FROM frame
+		WHERE imgFilename IS NOT NULL;
 	`);
 	const dbFiles = dbStmt.all() as { imgFilename: string }[];
 	const dbFileSet = new Set(dbFiles.map((f) => f.imgFilename));
@@ -120,7 +132,9 @@ export async function deleteUnnecessaryScreenshots() {
 export function deleteFrameFromDB(id: number) {
 	const db = getDatabase();
 	const deleteStmt = db.prepare(`
-		DELETE FROM frame WHERE id = ?;
+		DELETE
+		FROM frame
+		WHERE id = ?;
 	`);
 	deleteStmt.run(id);
 	console.log(`Deleted frame ${id} from database`);
@@ -148,11 +162,10 @@ export function processEncodingTasks() {
 	if (tasksPerforming.length >= CONCURRENCY) return;
 
 	const stmt = db.prepare(`
-        SELECT id, status
-        FROM encoding_task
-        WHERE status = 0
-        LIMIT ?
-    `);
+		SELECT id, status
+		FROM encoding_task
+		WHERE status = 0 LIMIT ?
+	`);
 
 	const tasks = stmt.all(CONCURRENCY - tasksPerforming.length) as EncodingTask[];
 
@@ -163,17 +176,19 @@ export function processEncodingTasks() {
 
 		// Update task status as processing (1)
 		const updateStmt = db.prepare(`
-            UPDATE encoding_task SET status = 1 WHERE id = ?
-        `);
+			UPDATE encoding_task
+			SET status = 1
+			WHERE id = ?
+		`);
 		updateStmt.run(taskId);
 
 		const framesStmt = db.prepare(`
             SELECT frame.imgFilename, frame.id
             FROM encoding_task_data
-            JOIN frame ON encoding_task_data.frame = frame.id
+                     JOIN frame ON encoding_task_data.frame = frame.id
             WHERE encoding_task_data.encodingTaskID = ?
-            ORDER BY frame.createdAt ASC
-        `);
+            ORDER BY frame.createdAt
+		`);
 		const frames = framesStmt.all(taskId) as Frame[];
 
 		const metaFilePath = path.join(getEncodingTempDir(), `${taskId}_meta.txt`);
@@ -193,13 +208,19 @@ export function processEncodingTasks() {
 				console.log(`Video ${videoPath} created successfully`);
 				// Update task status to complete (2)
 				const completeStmt = db.prepare(`
-                    UPDATE encoding_task SET status = 2 WHERE id = ?
-                `);
+					UPDATE encoding_task
+					SET status = 2
+					WHERE id = ?
+				`);
 				completeStmt.run(taskId);
 				for (let frameIndex = 0; frameIndex < frames.length; frameIndex++) {
 					const frame = frames[frameIndex];
 					const updateFrameStmt = db.prepare(`
-					    UPDATE frame SET videoPath = ?, videoFrameIndex = ?, encodeStatus = 2 WHERE id = ?
+						UPDATE frame
+						SET videoPath       = ?,
+							videoFrameIndex = ?,
+							encodeStatus    = 2
+						WHERE id = ?
 					`);
 					updateFrameStmt.run(`${taskId}.mp4`, frameIndex, frame.id);
 				}
