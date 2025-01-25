@@ -112,7 +112,7 @@ app.on("ready", () => {
 	initDatabase().then((db) => {
 		scheduler.addTask("screenshot", takeScreenshot, 2000);
 		scheduler.addTask("check-encoding", checkFramesForEncoding, 5000);
-		scheduler.addTask("process-encoding", processEncodingTasks, 10000);
+		scheduler.addTask("process-encoding", processEncodingTasks, 10000, "LOW_POWER");
 		scheduler.addTask("delete-screenshots", deleteUnnecessaryScreenshots, 20000);
 		dbConnection = db;
 		cache.put("server:dbConnection", dbConnection);

@@ -1,3 +1,5 @@
+import osu from "node-os-utils";
+
 type TaskId = string;
 type TaskFunction = () => void;
 
@@ -9,6 +11,7 @@ interface Task {
 	nextRun?: number;
 	isPaused: boolean;
 	delayUntil?: number;
+	requiredSystemState: SystemState;
 }
 
 export interface TaskStatus {
@@ -17,15 +20,27 @@ export interface TaskStatus {
     nextRun?: string;
 }
 
+type SystemState = "ANY" | "LOW_POWER" | "IDLE";
+
 export class Scheduler {
 	private tasks: Map<TaskId, Task> = new Map();
 	private timer: NodeJS.Timeout | null = null;
+	private monitorTimer: NodeJS.Timeout | null = null;
+	private cpuUsage: number = 0;
+
 	constructor(private readonly minTickInterval: number = 500) {
 		this.start();
 	}
 
 	private start(): void {
 		this.scheduleNextTick();
+		this.monitorTimer = setInterval(() => this.monitor(), 1000);
+	}
+
+	private monitor(): void {
+	    osu.cpu.usage().then((cpuPercentage) => {
+	        this.cpuUsage = cpuPercentage / 100;
+	    })
 	}
 
 	private scheduleNextTick(): void {
@@ -66,7 +81,17 @@ export class Scheduler {
 			return;
 		}
 
-		const isTaskReadyForIntervalRun = task.interval && task.nextRun && now >= task.nextRun;
+		const taskRequiredLowPower = task.requiredSystemState === "LOW_POWER";
+		const cpuUsage = this.cpuUsage;
+		const isSystemLowPower = cpuUsage < 0.75;
+		const isTaskReadyForLowPowerRun = taskRequiredLowPower ? isSystemLowPower : true;
+		const reachedTaskNextRun = task.interval && task.nextRun && now >= task.nextRun;
+		const isTaskReadyForIntervalRun = reachedTaskNextRun && isTaskReadyForLowPowerRun;
+		
+		if (!isTaskReadyForLowPowerRun) {
+			this.delayTask(task.id, 1000)
+		}
+
 		if (isTaskReadyForIntervalRun) {
 			task.func();
 			task.lastRun = now;
@@ -100,15 +125,17 @@ export class Scheduler {
 	 * @param id A unique string identifier for the task.
 	 * @param func The function to be executed by the task.
 	 * @param interval The interval (in milliseconds) between task executions.
+	 * @param requiredSystemState The required system state for the task to run.
 	 */
-	addTask(id: TaskId, func: TaskFunction, interval?: number): void {
+	addTask(id: TaskId, func: TaskFunction, interval?: number, requiredSystemState: SystemState = "ANY"): void {
 		this.tasks.set(id, {
 			id,
 			func,
 			interval,
 			isPaused: false,
 			lastRun: undefined,
-			nextRun: interval ? Date.now() + interval : undefined
+			nextRun: interval ? Date.now() + interval : undefined,
+			requiredSystemState: requiredSystemState,
 		});
 
 		this.scheduleNextTick();
@@ -172,6 +199,9 @@ export class Scheduler {
 		const task = this.tasks.get(id);
 		if (task) {
 			task.delayUntil = Date.now() + delayMs;
+			if (task.nextRun) {
+				task.nextRun += delayMs;
+			}
 		}
 
 		this.scheduleNextTick();
@@ -214,6 +244,10 @@ export class Scheduler {
 		if (this.timer) {
 			clearTimeout(this.timer);
 			this.timer = null;
+		}
+		if (this.monitorTimer) {
+			clearTimeout(this.monitorTimer);
+			this.monitorTimer = null;
 		}
 	}
 }
